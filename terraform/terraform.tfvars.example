@@ -1,0 +1,12 @@
+# ──────────────────────────────────────────────
+# Plantilla de Variables — Fastory Infrastructure
+# ──────────────────────────────────────────────
+# Instrucciones:
+#   1. Copiar este archivo:  cp terraform.tfvars.example terraform.tfvars
+#   2. Ajustar los valores según el entorno deseado
+#   3. NUNCA commitear el archivo terraform.tfvars (está en .gitignore)
+# ──────────────────────────────────────────────
+
+aws_region   = "us-east-1"
+project_name = "fastory"
+environment  = "production"  # Opciones: production | staging | development
