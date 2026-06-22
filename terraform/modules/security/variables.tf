@@ -21,6 +21,11 @@ variable "vpc_id" {
   type        = string
 }
 
+variable "vpc_cidr" {
+  description = "CIDR de la VPC para restringir reglas de egress"
+  type        = string
+}
+
 # ──────────────────────────────────────────────
 # Puertos de la aplicación
 # ──────────────────────────────────────────────

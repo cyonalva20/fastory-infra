@@ -36,13 +36,13 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # Salida libre
+  # [FIX CKV_AWS_382] Egress restringido al puerto de la app
   egress {
-    description = "Salida libre"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "Trafico hacia instancias EC2"
+    from_port   = var.app_port
+    to_port     = var.app_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
@@ -69,13 +69,29 @@ resource "aws_security_group" "ec2" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # Salida libre (para descargar dependencias, conectar a RDS, etc.)
+  # [FIX CKV_AWS_382] Egress restringido a puertos específicos
   egress {
-    description = "Salida libre"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
+    description = "HTTPS para descargar dependencias"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  egress {
+    description = "PostgreSQL hacia RDS"
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "Redis hacia ElastiCache"
+    from_port   = var.redis_port
+    to_port     = var.redis_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
@@ -102,13 +118,13 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.ec2.id]
   }
 
-  # Salida libre
+  # [FIX CKV_AWS_382] Egress restringido a la VPC
   egress {
-    description = "Salida libre"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "Respuestas dentro de la VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
@@ -135,13 +151,13 @@ resource "aws_security_group" "redis" {
     security_groups = [aws_security_group.ec2.id]
   }
 
-  # Salida libre
+  # [FIX CKV_AWS_382] Egress restringido a la VPC
   egress {
-    description = "Salida libre"
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = ["0.0.0.0/0"]
+    description = "Respuestas dentro de la VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
   }
 
   tags = {
