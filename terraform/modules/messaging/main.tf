@@ -31,13 +31,13 @@ resource "aws_sqs_queue" "dlq" {
 # Cola principal de mensajes para procesamiento asíncrono.
 
 resource "aws_sqs_queue" "main" {
-  name                       = "${local.name_prefix}-queue"
-  delay_seconds              = 0
-  max_message_size           = 262144  # 256 KB
-  message_retention_seconds  = 345600  # 4 días
-  receive_wait_time_seconds  = 10      # Long polling
-  visibility_timeout_seconds = 30
-  kms_master_key_id          = var.kms_key_arn
+  name                              = "${local.name_prefix}-queue"
+  delay_seconds                     = 0
+  max_message_size                  = 262144 # 256 KB
+  message_retention_seconds         = 345600 # 4 días
+  receive_wait_time_seconds         = 10     # Long polling
+  visibility_timeout_seconds        = 30
+  kms_master_key_id                 = var.kms_key_arn
   kms_data_key_reuse_period_seconds = 300
 
   redrive_policy = jsonencode({
