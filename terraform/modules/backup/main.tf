@@ -34,10 +34,10 @@ resource "aws_backup_plan" "daily" {
   rule {
     rule_name         = "${local.name_prefix}-daily-rule"
     target_vault_name = aws_backup_vault.main.name
-    schedule          = "cron(0 3 * * ? *)"  # Todos los días a las 03:00 UTC
+    schedule          = "cron(0 3 * * ? *)" # Todos los días a las 03:00 UTC
 
     lifecycle {
-      delete_after = 7  # Retención de 7 días
+      delete_after = 7 # Retención de 7 días
     }
   }
 
