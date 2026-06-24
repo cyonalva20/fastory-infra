@@ -23,6 +23,7 @@ resource "aws_lb" "main" {
   load_balancer_type = "application"
   security_groups    = [var.alb_security_group_id]
   subnets            = var.public_subnet_ids
+  drop_invalid_header_fields = true
 
   tags = {
     Name = "${local.name_prefix}-alb"
@@ -158,6 +159,12 @@ resource "aws_launch_template" "main" {
   name          = "${local.name_prefix}-lt"
   image_id      = data.aws_ami.al2023.id
   instance_type = var.instance_type
+
+  metadata_options {
+    http_endpoint               = "enabled"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
+  }
 
   # Perfil IAM con permisos de SSM y X-Ray
   iam_instance_profile {
