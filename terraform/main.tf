@@ -42,10 +42,10 @@ provider "aws" {
 module "networking" {
   source = "./modules/networking"
 
-  project_name       = var.project_name
-  environment        = var.environment
-  vpc_cidr           = var.vpc_cidr
-  availability_zones = var.availability_zones
+  project_name         = var.project_name
+  environment          = var.environment
+  vpc_cidr             = var.vpc_cidr
+  availability_zones   = var.availability_zones
   public_subnet_cidrs  = var.public_subnet_cidrs
   private_subnet_cidrs = var.private_subnet_cidrs
 }
@@ -108,9 +108,9 @@ module "compute" {
 module "cache" {
   source = "./modules/cache"
 
-  project_name           = var.project_name
-  environment            = var.environment
-  private_subnet_ids     = module.networking.private_subnet_ids
+  project_name            = var.project_name
+  environment             = var.environment
+  private_subnet_ids      = module.networking.private_subnet_ids
   redis_security_group_id = module.security.redis_security_group_id
 }
 
@@ -151,10 +151,10 @@ module "backup" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  project_name           = var.project_name
-  environment            = var.environment
-  asg_name               = module.compute.asg_name
-  alb_arn_suffix         = module.compute.alb_arn_suffix
+  project_name            = var.project_name
+  environment             = var.environment
+  asg_name                = module.compute.asg_name
+  alb_arn_suffix          = module.compute.alb_arn_suffix
   target_group_arn_suffix = module.compute.target_group_arn_suffix
 }
 
