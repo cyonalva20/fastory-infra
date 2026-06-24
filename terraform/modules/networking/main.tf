@@ -113,6 +113,7 @@ resource "aws_iam_role_policy" "vpc_flow_logs" {
 # ════════════════════════════════════════════════
 
 resource "aws_subnet" "public" {
+  #checkov:skip=CKV_AWS_130:Las subredes publicas necesitan auto-asignar IP para el ALB
   count = length(var.availability_zones)
 
   vpc_id                  = aws_vpc.main.id
