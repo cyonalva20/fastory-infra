@@ -49,6 +49,12 @@ variable "ec2_security_group_id" {
 # Instancia EC2
 # ──────────────────────────────────────────────
 
+variable "app_port" {
+  description = "Puerto de la aplicación Spring Boot en las instancias EC2"
+  type        = number
+  default     = 8080
+}
+
 variable "instance_type" {
   description = "Tipo de instancia EC2 para el Launch Template"
   type        = string
