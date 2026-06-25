@@ -67,9 +67,16 @@ output "sqs_queue_url" {
 
 # ── CDN ──────────────────────────────────────
 
+/*
 output "cloudfront_url" {
   description = "URL del CDN CloudFront (acceso al frontend)"
   value       = module.cdn.cloudfront_domain_name
+}
+*/
+
+output "s3_website_url" {
+  description = "URL del S3 Bucket (acceso directo al frontend para demo)"
+  value       = module.storage.frontend_website_endpoint
 }
 
 # ── Storage ──────────────────────────────────

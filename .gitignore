@@ -29,3 +29,10 @@ Thumbs.db
 *.swp
 *.swo
 *~
+
+# ========================
+# Security Scans (Checkov)
+# ========================
+results_junit.xml
+checkov_results.xml
+*.xml

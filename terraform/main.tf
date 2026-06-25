@@ -176,7 +176,9 @@ module "storage" {
 # ════════════════════════════════════════════════
 # CDN global con doble origen (S3 frontend + ALB API).
 # ACM y WAF se activan solo con dominio personalizado.
+# NOTA: Comentado para la demo por restricciones de cuenta nueva en AWS.
 
+/*
 module "cdn" {
   source = "./modules/cdn"
 
@@ -187,18 +189,22 @@ module "cdn" {
   s3_frontend_bucket_id          = module.storage.frontend_bucket_id
   alb_dns_name                   = module.compute.alb_dns_name
 }
+*/
 
 # ════════════════════════════════════════════════
 # MÓDULO 11: DNS (Route 53)
 # ════════════════════════════════════════════════
 # Hosted Zone y registros DNS para el dominio personalizado.
 # Se activa solo con enable_custom_domain = true.
+# NOTA: Comentado porque depende del CDN.
 
+/*
 module "dns" {
   source = "./modules/dns"
 
   project_name           = var.project_name
   environment            = var.environment
   enable_custom_domain   = var.enable_custom_domain
-  cloudfront_domain_name = module.cdn.cloudfront_domain_name
+  cloudfront_domain_name = "" # module.cdn.cloudfront_domain_name
 }
+*/

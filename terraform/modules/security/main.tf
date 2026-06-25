@@ -216,6 +216,7 @@ resource "aws_secretsmanager_secret" "db_credentials" {
   name        = "${var.project_name}/db-credentials"
   description = "Credenciales de la base de datos PostgreSQL"
   kms_key_id  = aws_kms_key.main.arn
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${local.name_prefix}-db-credentials"
@@ -227,6 +228,7 @@ resource "aws_secretsmanager_secret" "jwt_secret" {
   name        = "${var.project_name}/jwt-secret"
   description = "Secreto JWT para autenticación del backend"
   kms_key_id  = aws_kms_key.main.arn
+  recovery_window_in_days = 0
 
   tags = {
     Name = "${local.name_prefix}-jwt-secret"
