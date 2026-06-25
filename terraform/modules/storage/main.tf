@@ -90,6 +90,8 @@ resource "aws_s3_bucket_policy" "public_read" {
   # checkov:skip=CKV_AWS_20: "S3 Bucket is public because CDN is disabled for university demo."
   bucket = aws_s3_bucket.frontend.id
 
+  depends_on = [aws_s3_bucket_public_access_block.frontend]
+
   policy = jsonencode({
     Version = "2012-10-17"
     Statement = [
