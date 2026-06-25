@@ -172,8 +172,11 @@ resource "aws_launch_template" "main" {
     arn = aws_iam_instance_profile.ec2.arn
   }
 
-  # Security Group para las instancias EC2
-  vpc_security_group_ids = [var.ec2_security_group_id]
+  # Interfaz de red: sin IP pública (CKV_AWS_88) + Security Group
+  network_interfaces {
+    associate_public_ip_address = false
+    security_groups             = [var.ec2_security_group_id]
+  }
 
   # Script de inicialización: instala Docker y X-Ray daemon
   user_data = base64encode(<<-EOF
