@@ -97,6 +97,7 @@ resource "aws_db_instance" "main" {
   skip_final_snapshot        = true
   auto_minor_version_upgrade = true
   copy_tags_to_snapshot      = true
+  deletion_protection        = true
 
   # Monitoreo
   performance_insights_enabled = false
