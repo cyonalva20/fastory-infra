@@ -93,11 +93,12 @@ resource "aws_db_instance" "main" {
   publicly_accessible    = false
 
   # Backups y mantenimiento
-  backup_retention_period    = 7
-  skip_final_snapshot        = true
-  auto_minor_version_upgrade = true
-  copy_tags_to_snapshot      = true
-  deletion_protection        = true
+  backup_retention_period         = 7
+  skip_final_snapshot             = true
+  auto_minor_version_upgrade      = true
+  copy_tags_to_snapshot           = true
+  deletion_protection             = true
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
   # Monitoreo
   performance_insights_enabled = false
