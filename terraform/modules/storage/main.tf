@@ -36,7 +36,26 @@ resource "aws_s3_bucket_versioning" "frontend" {
 }
 
 # ════════════════════════════════════════════════
-# 3. CIFRADO — Server-Side Encryption
+# 3. CICLO DE VIDA — Limpieza de versiones antiguas
+# ════════════════════════════════════════════════
+# Elimina automáticamente las versiones antiguas de los objetos
+# después de 90 días para ahorrar costos de almacenamiento.
+
+resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
+  bucket = aws_s3_bucket.frontend.id
+
+  rule {
+    id     = "cleanup-noncurrent-versions"
+    status = "Enabled"
+
+    noncurrent_version_expiration {
+      noncurrent_days = 90
+    }
+  }
+}
+
+# ════════════════════════════════════════════════
+# 4. CIFRADO — Server-Side Encryption
 # ════════════════════════════════════════════════
 # Cifrado automático de todos los objetos con AES-256.
 
@@ -51,7 +70,7 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
 }
 
 # ════════════════════════════════════════════════
-# 4. BLOQUEO DE ACCESO PÚBLICO — Seguridad
+# 5. BLOQUEO DE ACCESO PÚBLICO — Seguridad
 # ════════════════════════════════════════════════
 # El acceso público se controla SOLO a través de CloudFront (OAC).
 # El bucket en sí permanece privado.
@@ -66,7 +85,7 @@ resource "aws_s3_bucket_public_access_block" "frontend" {
 }
 
 # ════════════════════════════════════════════════
-# 5. WEBSITE CONFIGURATION — Hosting estático
+# 6. WEBSITE CONFIGURATION — Hosting estático
 # ════════════════════════════════════════════════
 # Configura el bucket como sitio web estático.
 
@@ -83,7 +102,7 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
 }
 
 # ════════════════════════════════════════════════
-# 6. BUCKET POLICY — Acceso Público (Solo para Demo sin CDN)
+# 7. BUCKET POLICY — Acceso Público (Solo para Demo sin CDN)
 # ════════════════════════════════════════════════
 
 resource "aws_s3_bucket_policy" "public_read" {
