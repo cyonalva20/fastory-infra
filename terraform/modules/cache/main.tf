@@ -42,6 +42,8 @@ resource "aws_elasticache_cluster" "redis" {
   security_group_ids       = [var.redis_security_group_id]
   snapshot_retention_limit = 7
 
+  auto_minor_version_upgrade = true
+
   tags = {
     Name = "${local.name_prefix}-redis"
   }
