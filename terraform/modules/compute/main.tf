@@ -25,6 +25,7 @@ resource "aws_lb" "main" {
   subnets            = var.public_subnet_ids
   drop_invalid_header_fields = true
   enable_deletion_protection = true
+  desync_mitigation_mode     = "strictest"
 
   tags = {
     Name = "${local.name_prefix}-alb"
