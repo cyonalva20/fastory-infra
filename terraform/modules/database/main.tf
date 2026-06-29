@@ -86,6 +86,8 @@ resource "aws_db_instance" "main" {
   password = random_password.db_password.result
   port     = var.db_port
 
+  iam_database_authentication_enabled = true
+
   # Red
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.rds_security_group_id]
