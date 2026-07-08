@@ -1,0 +1,53 @@
+// ──────────────────────────────────────────────
+// Alloy — Configuracion del recolector de logs
+// ──────────────────────────────────────────────
+// Alloy reemplaza a Promtail (en fin de vida desde
+// marzo 2026). Recolecta logs de los contenedores
+// Docker y los envia a Loki para su almacenamiento.
+// ──────────────────────────────────────────────
+
+// ── Descubrimiento de contenedores Docker ──
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+// ── Etiquetado de logs ──
+discovery.relabel "docker_labels" {
+  targets = discovery.docker.containers.targets
+
+  // Usar el nombre del contenedor como etiqueta
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container"
+    regex         = "/(.*)"
+  }
+
+  // Clasificar por tier segun el nombre del contenedor
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "tier"
+    regex         = "fastory-(backend|frontend).*"
+    replacement   = "application"
+  }
+
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "tier"
+    regex         = "fastory-(prometheus|grafana|loki|alloy|node-exporter|cadvisor).*"
+    replacement   = "infrastructure"
+  }
+}
+
+// ── Recoleccion de logs desde Docker ──
+loki.source.docker "docker_logs" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.docker_labels.output
+  forward_to = [loki.write.loki_endpoint.receiver]
+}
+
+// ── Envio de logs a Loki ──
+loki.write "loki_endpoint" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}
