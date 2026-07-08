@@ -213,9 +213,9 @@ resource "aws_kms_alias" "main" {
 
 #checkov:skip=CKV2_AWS_57:No implementaremos lambda de rotacion para la demo
 resource "aws_secretsmanager_secret" "db_credentials" {
-  name        = "${var.project_name}/db-credentials"
-  description = "Credenciales de la base de datos PostgreSQL"
-  kms_key_id  = aws_kms_key.main.arn
+  name                    = "${var.project_name}/db-credentials"
+  description             = "Credenciales de la base de datos PostgreSQL"
+  kms_key_id              = aws_kms_key.main.arn
   recovery_window_in_days = 0
 
   tags = {
@@ -225,9 +225,9 @@ resource "aws_secretsmanager_secret" "db_credentials" {
 
 #checkov:skip=CKV2_AWS_57:No implementaremos lambda de rotacion para la demo
 resource "aws_secretsmanager_secret" "jwt_secret" {
-  name        = "${var.project_name}/jwt-secret"
-  description = "Secreto JWT para autenticación del backend"
-  kms_key_id  = aws_kms_key.main.arn
+  name                    = "${var.project_name}/jwt-secret"
+  description             = "Secreto JWT para autenticación del backend"
+  kms_key_id              = aws_kms_key.main.arn
   recovery_window_in_days = 0
 
   tags = {

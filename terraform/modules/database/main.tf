@@ -38,9 +38,9 @@ resource "random_password" "db_password" {
 # ════════════════════════════════════════════════
 
 resource "aws_secretsmanager_secret" "rds_credentials" {
-  name        = "${local.name_prefix}/rds-proxy-credentials"
-  description = "Credenciales de la BD PostgreSQL para RDS Proxy"
-  kms_key_id  = var.kms_key_arn
+  name                    = "${local.name_prefix}/rds-proxy-credentials"
+  description             = "Credenciales de la BD PostgreSQL para RDS Proxy"
+  kms_key_id              = var.kms_key_arn
   recovery_window_in_days = 0
 
   tags = {

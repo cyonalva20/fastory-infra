@@ -18,11 +18,11 @@ locals {
 # distribuye a las instancias EC2 en subredes privadas.
 
 resource "aws_lb" "main" {
-  name               = "${local.name_prefix}-alb"
-  internal           = false
-  load_balancer_type = "application"
-  security_groups    = [var.alb_security_group_id]
-  subnets            = var.public_subnet_ids
+  name                       = "${local.name_prefix}-alb"
+  internal                   = false
+  load_balancer_type         = "application"
+  security_groups            = [var.alb_security_group_id]
+  subnets                    = var.public_subnet_ids
   drop_invalid_header_fields = true
 
   tags = {
