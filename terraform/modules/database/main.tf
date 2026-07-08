@@ -86,17 +86,21 @@ resource "aws_db_instance" "main" {
   password = random_password.db_password.result
   port     = var.db_port
 
+  iam_database_authentication_enabled = true
+
   # Red
   db_subnet_group_name   = aws_db_subnet_group.main.name
   vpc_security_group_ids = [var.rds_security_group_id]
-  multi_az               = false
+  multi_az               = true
   publicly_accessible    = false
 
   # Backups y mantenimiento
-  backup_retention_period    = 7
-  skip_final_snapshot        = true
-  auto_minor_version_upgrade = true
-  copy_tags_to_snapshot      = true
+  backup_retention_period         = 7
+  skip_final_snapshot             = true
+  auto_minor_version_upgrade      = true
+  copy_tags_to_snapshot           = true
+  deletion_protection             = true
+  enabled_cloudwatch_logs_exports = ["postgresql", "upgrade"]
 
   # Monitoreo
   performance_insights_enabled = false

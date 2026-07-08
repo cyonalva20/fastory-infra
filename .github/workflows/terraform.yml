@@ -54,6 +54,13 @@ jobs:
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform validate
 
+      - name: Checkov Security Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ env.WORKING_DIR }}
+          framework: terraform
+          soft_fail: true # Inicialmente en true para que muestre advertencias pero no bloquee el PR bruscamente
+
       - name: Terraform Plan
         id: plan
         working-directory: ${{ env.WORKING_DIR }}
