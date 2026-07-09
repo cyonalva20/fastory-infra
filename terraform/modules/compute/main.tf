@@ -18,6 +18,8 @@ locals {
 # distribuye a las instancias EC2 en subredes privadas.
 
 resource "aws_lb" "main" {
+  # checkov:skip=CKV2_AWS_76: "WAF no es requerido para este entorno de demostracion."
+  # checkov:skip=CKV_AWS_91: "ALB access logging deshabilitado para ahorrar costos de almacenamiento."
   name                       = "${local.name_prefix}-alb"
   internal                   = false
   load_balancer_type         = "application"
@@ -67,6 +69,7 @@ resource "aws_lb_target_group" "main" {
 # Escucha en el puerto 80 y reenvía al Target Group.
 
 resource "aws_lb_listener" "http" {
+  # checkov:skip=CKV_AWS_2: "Listener HTTP requerido porque no hay un dominio personalizado ni ACM configurado para HTTPS."
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"

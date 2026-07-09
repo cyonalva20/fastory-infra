@@ -14,8 +14,8 @@ locals {
 # Permite tráfico HTTP/HTTPS desde internet.
 
 #checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia al ALB en el modulo compute
-#checkov:skip=CKV_AWS_260:El ALB debe recibir trafico HTTP para redireccion a HTTPS
 resource "aws_security_group" "alb" {
+  # checkov:skip=CKV_AWS_260: "Ingress HTTP 80 requerido para ALB publico sin HTTPS."
   name        = "${local.name_prefix}-alb-sg"
   description = "Security Group para el Application Load Balancer"
   vpc_id      = var.vpc_id

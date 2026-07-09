@@ -66,6 +66,8 @@ resource "aws_secretsmanager_secret_version" "rds_credentials" {
 # ════════════════════════════════════════════════
 
 resource "aws_db_instance" "main" {
+  # checkov:skip=CKV_AWS_118: "Enhanced monitoring deshabilitado para optimizacion de costos."
+  # checkov:skip=CKV_AWS_353: "Performance Insights deshabilitado para mantener RDS en Free Tier."
   identifier = "${local.name_prefix}-postgres"
 
   # Motor y versión
