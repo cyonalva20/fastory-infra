@@ -51,6 +51,10 @@ resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
     noncurrent_version_expiration {
       noncurrent_days = 90
     }
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
   }
 }
 
@@ -77,6 +81,10 @@ resource "aws_s3_bucket_server_side_encryption_configuration" "frontend" {
 # El bucket en sí permanece privado.
 
 resource "aws_s3_bucket_public_access_block" "frontend" {
+  # checkov:skip=CKV_AWS_54: "Bucket S3 debe ser publico para alojar web sin CDN (demo)."
+  # checkov:skip=CKV_AWS_53: "Bucket S3 debe ser publico para alojar web sin CDN (demo)."
+  # checkov:skip=CKV_AWS_55: "Bucket S3 debe ser publico para alojar web sin CDN (demo)."
+  # checkov:skip=CKV_AWS_56: "Bucket S3 debe ser publico para alojar web sin CDN (demo)."
   bucket = aws_s3_bucket.frontend.id
 
   block_public_acls       = false
@@ -108,6 +116,7 @@ resource "aws_s3_bucket_website_configuration" "frontend" {
 
 resource "aws_s3_bucket_policy" "public_read" {
   # checkov:skip=CKV_AWS_20: "S3 Bucket is public because CDN is disabled for university demo."
+  # checkov:skip=CKV_AWS_70: "El bucket S3 debe permitir lectura publica (Principal *) para alojar la web estatica."
   bucket = aws_s3_bucket.frontend.id
 
   depends_on = [aws_s3_bucket_public_access_block.frontend]

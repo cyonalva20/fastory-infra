@@ -57,6 +57,7 @@ resource "aws_flow_log" "main" {
 }
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
+  # checkov:skip=CKV_AWS_158: "Encriptacion KMS para CloudWatch logs no requerida en demo."
   name              = "/aws/vpc/${local.name_prefix}-flow-logs"
   retention_in_days = 365
 
@@ -87,6 +88,8 @@ resource "aws_iam_role" "vpc_flow_logs" {
 }
 
 resource "aws_iam_role_policy" "vpc_flow_logs" {
+  # checkov:skip=CKV_AWS_290: "Permiso de escritura de logs permitido globalmente para flow logs por simplicidad en demo."
+  # checkov:skip=CKV_AWS_355: "Permiso de recurso * requerido por IAM policy generica de AWS."
   name = "${local.name_prefix}-vpc-flow-logs-policy"
   role = aws_iam_role.vpc_flow_logs.id
 

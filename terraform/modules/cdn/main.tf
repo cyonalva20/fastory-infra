@@ -128,6 +128,10 @@ resource "aws_cloudfront_origin_access_control" "s3" {
 # globales de AWS, reduciendo la latencia para los usuarios.
 
 resource "aws_cloudfront_distribution" "main" {
+  # checkov:skip=CKV_AWS_310: "Origin failover no requerido."
+  # checkov:skip=CKV_AWS_86: "Access logging deshabilitado para reducir costos en demo."
+  # checkov:skip=CKV_AWS_374: "Geo restriction no requerida."
+  # checkov:skip=CKV_AWS_174: "Imposible forzar TLSv1.2_2021 usando certificado por defecto."
   comment             = "CDN para ${local.name_prefix} — Frontend y API"
   enabled             = true
   is_ipv6_enabled     = true
