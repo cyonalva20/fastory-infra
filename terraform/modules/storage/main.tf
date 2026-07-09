@@ -51,6 +51,8 @@ resource "aws_s3_bucket_lifecycle_configuration" "frontend" {
   rule {
     id     = "cleanup-noncurrent-versions"
     status = "Enabled"
+    
+    filter {}
 
     noncurrent_version_expiration {
       noncurrent_days = 90
