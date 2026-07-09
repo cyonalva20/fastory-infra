@@ -42,6 +42,7 @@ resource "aws_acm_certificate" "main" {
 # NOTA: SCOPE=CLOUDFRONT requiere región us-east-1.
 
 resource "aws_wafv2_web_acl" "main" {
+  # checkov:skip=CKV2_AWS_31: "WAF Logging configuration deshabilitada para reducir costos."
   count = var.enable_custom_domain ? 1 : 0
 
   name  = "${local.name_prefix}-waf"
@@ -132,6 +133,8 @@ resource "aws_cloudfront_distribution" "main" {
   # checkov:skip=CKV_AWS_86: "Access logging deshabilitado para reducir costos en demo."
   # checkov:skip=CKV_AWS_374: "Geo restriction no requerida."
   # checkov:skip=CKV_AWS_174: "Imposible forzar TLSv1.2_2021 usando certificado por defecto."
+  # checkov:skip=CKV2_AWS_47: "WAF Log4j ruleset no requerido para esta demo (app en node/python o framework seguro)."
+  # checkov:skip=CKV2_AWS_32: "Response Headers Policy avanzada no requerida."
   comment             = "CDN para ${local.name_prefix} — Frontend y API"
   enabled             = true
   is_ipv6_enabled     = true

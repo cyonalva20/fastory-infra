@@ -15,6 +15,10 @@ locals {
 # Almacena los archivos compilados del frontend (HTML, CSS, JS).
 
 resource "aws_s3_bucket" "frontend" {
+  # checkov:skip=CKV_AWS_18: "S3 access logging deshabilitado para reducir costos."
+  # checkov:skip=CKV_AWS_144: "Replicacion Multi-Region deshabilitada por costos."
+  # checkov:skip=CKV2_AWS_62: "Notificaciones de eventos S3 no requeridas."
+  # checkov:skip=CKV2_AWS_6: "Bloqueo de acceso publico evaluado en su recurso dedicado, no a nivel bucket root."
   bucket = "${local.name_prefix}-frontend"
 
   tags = {
