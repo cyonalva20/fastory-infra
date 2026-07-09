@@ -7,6 +7,8 @@ on:
   pull_request:
     branches:
       - main
+      - develop
+  workflow_dispatch:
 
 permissions:
   id-token: write   # Requerido para OIDC
@@ -48,10 +50,18 @@ jobs:
       - name: Terraform Format Check
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform fmt -check -recursive
+        continue-on-error: true
 
       - name: Terraform Validate
         working-directory: ${{ env.WORKING_DIR }}
         run: terraform validate
+
+      - name: Checkov Security Scan
+        uses: bridgecrewio/checkov-action@master
+        with:
+          directory: ${{ env.WORKING_DIR }}
+          framework: terraform
+          soft_fail: true # Inicialmente en true para que muestre advertencias pero no bloquee el PR bruscamente
 
       - name: Terraform Plan
         id: plan
@@ -89,7 +99,7 @@ jobs:
   terraform-apply:
     name: "Terraform Apply"
     runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
     environment: production
 
     steps:

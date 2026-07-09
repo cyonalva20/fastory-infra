@@ -1,0 +1,25 @@
+# ──────────────────────────────────────────────
+# Grafana — Provisioning de Datasources
+# ──────────────────────────────────────────────
+# Define las fuentes de datos que Grafana carga
+# automaticamente al arrancar (infraestructura como codigo).
+# No es necesario crear los datasources manualmente.
+# ──────────────────────────────────────────────
+
+apiVersion: 1
+
+datasources:
+  # ── Prometheus: metricas de infraestructura y aplicacion ──
+  - name: Prometheus
+    type: prometheus
+    access: proxy
+    url: http://prometheus:9090
+    isDefault: true
+    editable: false
+
+  # ── Loki: logs de contenedores y aplicacion ──
+  - name: Loki
+    type: loki
+    access: proxy
+    url: http://loki:3100
+    editable: false

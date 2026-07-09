@@ -1,0 +1,148 @@
+# ──────────────────────────────────────────────
+# Playbook: Configuración del Servidor de Aplicación
+# ──────────────────────────────────────────────
+# Este playbook configura las instancias EC2 del ASG
+# con las herramientas necesarias para ejecutar la
+# aplicación Fastory (Docker, Java 17, X-Ray).
+# ──────────────────────────────────────────────
+# Uso: ansible-playbook playbooks/setup-server.yml
+# ──────────────────────────────────────────────
+
+---
+- name: Configurar servidor de aplicación Fastory
+  hosts: app_servers
+  become: yes
+
+  vars:
+    docker_compose_version: "2.24.0"
+    java_package: "java-17-amazon-corretto"
+
+  tasks:
+    # ════════════════════════════════════════════
+    # 1. ACTUALIZACIÓN DEL SISTEMA
+    # ════════════════════════════════════════════
+
+    - name: Actualizar todos los paquetes del sistema
+      yum:
+        name: '*'
+        state: latest
+      tags: [setup, update]
+
+    # ════════════════════════════════════════════
+    # 2. INSTALACIÓN DE DOCKER
+    # ════════════════════════════════════════════
+
+    - name: Instalar Docker
+      yum:
+        name: docker
+        state: present
+      tags: [setup, docker]
+
+    - name: Iniciar y habilitar el servicio Docker
+      systemd:
+        name: docker
+        state: started
+        enabled: yes
+      tags: [setup, docker]
+
+    - name: Agregar usuario ec2-user al grupo docker
+      user:
+        name: ec2-user
+        groups: docker
+        append: yes
+      tags: [setup, docker]
+
+    # ════════════════════════════════════════════
+    # 3. INSTALACIÓN DE DOCKER COMPOSE
+    # ════════════════════════════════════════════
+
+    - name: Descargar Docker Compose
+      get_url:
+        url: "https://github.com/docker/compose/releases/download/v{{ docker_compose_version }}/docker-compose-linux-x86_64"
+        dest: /usr/local/bin/docker-compose
+        mode: '0755'
+      tags: [setup, docker]
+
+    # ════════════════════════════════════════════
+    # 4. INSTALACIÓN DE JAVA 17
+    # ════════════════════════════════════════════
+
+    - name: Instalar Java 17 (Amazon Corretto)
+      yum:
+        name: "{{ java_package }}"
+        state: present
+      tags: [setup, java]
+
+    # ════════════════════════════════════════════
+    # 5. INSTALACIÓN DE AWS X-RAY DAEMON
+    # ════════════════════════════════════════════
+
+    - name: Descargar AWS X-Ray Daemon
+      get_url:
+        url: https://s3.us-east-2.amazonaws.com/aws-xray-assets.us-east-2/xray-daemon/aws-xray-daemon-3.x.rpm
+        dest: /tmp/xray-daemon.rpm
+      tags: [setup, xray]
+
+    - name: Instalar AWS X-Ray Daemon
+      yum:
+        name: /tmp/xray-daemon.rpm
+        state: present
+        disable_gpg_check: yes
+      tags: [setup, xray]
+
+    - name: Iniciar y habilitar X-Ray Daemon
+      systemd:
+        name: xray
+        state: started
+        enabled: yes
+      tags: [setup, xray]
+
+    # ════════════════════════════════════════════
+    # 6. CONFIGURACIÓN DE VARIABLES DE ENTORNO
+    # ════════════════════════════════════════════
+
+    - name: Crear archivo de variables de entorno para la aplicación
+      copy:
+        dest: /home/ec2-user/.env
+        owner: ec2-user
+        group: ec2-user
+        mode: '0600'
+        content: |
+          # Variables de entorno para Fastory Backend
+          # Estos valores se obtienen de terraform output
+          SPRING_DATASOURCE_URL=jdbc:postgresql://PENDIENTE_RDS_PROXY_ENDPOINT:5432/fastory_db
+          SPRING_DATASOURCE_USERNAME=fastory_admin
+          SPRING_DATASOURCE_PASSWORD=PENDIENTE_SECRETS_MANAGER
+          JWT_SECRET=PENDIENTE_SECRETS_MANAGER
+          PORT=8080
+      tags: [setup, config]
+
+    # ════════════════════════════════════════════
+    # 7. VERIFICACIONES FINALES
+    # ════════════════════════════════════════════
+
+    - name: Verificar instalación de Docker
+      command: docker --version
+      register: docker_version
+      changed_when: false
+      tags: [verify]
+
+    - name: Verificar instalación de Java
+      command: java -version
+      register: java_version
+      changed_when: false
+      tags: [verify]
+
+    - name: Verificar instalación de Docker Compose
+      command: docker-compose --version
+      register: compose_version
+      changed_when: false
+      tags: [verify]
+
+    - name: Mostrar versiones instaladas
+      debug:
+        msg:
+          - "Docker: {{ docker_version.stdout }}"
+          - "Java: {{ java_version.stderr }}"
+          - "Docker Compose: {{ compose_version.stdout }}"
+      tags: [verify]
