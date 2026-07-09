@@ -20,6 +20,8 @@ locals {
 resource "aws_lb" "main" {
   # checkov:skip=CKV2_AWS_76: "WAF no es requerido para este entorno de demostracion."
   # checkov:skip=CKV_AWS_91: "ALB access logging deshabilitado para ahorrar costos de almacenamiento."
+  # checkov:skip=CKV2_AWS_28: "WAF publico en ALB no requerido."
+  # checkov:skip=CKV2_AWS_20: "Sin dominio ni ACM, no se puede redirigir a HTTPS."
   name                       = "${local.name_prefix}-alb"
   internal                   = false
   load_balancer_type         = "application"
@@ -41,6 +43,7 @@ resource "aws_lb" "main" {
 # Health check en /actuator/health (Spring Boot Actuator).
 
 resource "aws_lb_target_group" "main" {
+  # checkov:skip=CKV_AWS_378: "Se requiere protocolo HTTP en el backend de demo local."
   name     = "${local.name_prefix}-tg"
   port     = var.app_port
   protocol = "HTTP"
@@ -70,6 +73,7 @@ resource "aws_lb_target_group" "main" {
 
 resource "aws_lb_listener" "http" {
   # checkov:skip=CKV_AWS_2: "Listener HTTP requerido porque no hay un dominio personalizado ni ACM configurado para HTTPS."
+  # checkov:skip=CKV_AWS_103: "TLS no aplicable porque usamos HTTP."
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"

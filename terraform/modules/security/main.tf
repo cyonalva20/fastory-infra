@@ -57,8 +57,8 @@ resource "aws_security_group" "alb" {
 # ════════════════════════════════════════════════
 # Solo permite tráfico desde el ALB en el puerto de la app.
 
-#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia a EC2 en el modulo compute
 resource "aws_security_group" "ec2" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a EC2 en el modulo compute."
   name        = "${local.name_prefix}-ec2-sg"
   description = "Security Group para las instancias EC2 del ASG"
   vpc_id      = var.vpc_id
@@ -107,8 +107,8 @@ resource "aws_security_group" "ec2" {
 # ════════════════════════════════════════════════
 # Solo permite tráfico desde las instancias EC2 en el puerto 5432.
 
-#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia a RDS en el modulo database
 resource "aws_security_group" "rds" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a RDS en el modulo database."
   name        = "${local.name_prefix}-rds-sg"
   description = "Security Group para RDS PostgreSQL"
   vpc_id      = var.vpc_id
@@ -141,8 +141,8 @@ resource "aws_security_group" "rds" {
 # ════════════════════════════════════════════════
 # Solo permite tráfico desde las instancias EC2 en el puerto 6379.
 
-#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia a ElastiCache en el modulo cache
 resource "aws_security_group" "redis" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a ElastiCache en el modulo cache."
   name        = "${local.name_prefix}-redis-sg"
   description = "Security Group para ElastiCache Redis"
   vpc_id      = var.vpc_id
@@ -211,8 +211,8 @@ resource "aws_kms_alias" "main" {
 # Solo se crean los "cascarones"; los valores reales se
 # inyectan manualmente o por variables después.
 
-#checkov:skip=CKV2_AWS_57:No implementaremos lambda de rotacion para la demo
 resource "aws_secretsmanager_secret" "db_credentials" {
+  # checkov:skip=CKV2_AWS_57: "No implementaremos lambda de rotacion para la demo."
   name                    = "${var.project_name}/db-credentials"
   description             = "Credenciales de la base de datos PostgreSQL"
   kms_key_id              = aws_kms_key.main.arn
@@ -223,8 +223,8 @@ resource "aws_secretsmanager_secret" "db_credentials" {
   }
 }
 
-#checkov:skip=CKV2_AWS_57:No implementaremos lambda de rotacion para la demo
 resource "aws_secretsmanager_secret" "jwt_secret" {
+  # checkov:skip=CKV2_AWS_57: "No implementaremos lambda de rotacion para la demo."
   name                    = "${var.project_name}/jwt-secret"
   description             = "Secreto JWT para autenticación del backend"
   kms_key_id              = aws_kms_key.main.arn

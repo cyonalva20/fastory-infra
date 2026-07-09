@@ -38,6 +38,7 @@ resource "random_password" "db_password" {
 # ════════════════════════════════════════════════
 
 resource "aws_secretsmanager_secret" "rds_credentials" {
+  # checkov:skip=CKV2_AWS_57: "No implementaremos lambda de rotacion de secretos para la demo."
   name                    = "${local.name_prefix}/rds-proxy-credentials"
   description             = "Credenciales de la BD PostgreSQL para RDS Proxy"
   kms_key_id              = var.kms_key_arn
@@ -68,6 +69,7 @@ resource "aws_secretsmanager_secret_version" "rds_credentials" {
 resource "aws_db_instance" "main" {
   # checkov:skip=CKV_AWS_118: "Enhanced monitoring deshabilitado para optimizacion de costos."
   # checkov:skip=CKV_AWS_353: "Performance Insights deshabilitado para mantener RDS en Free Tier."
+  # checkov:skip=CKV2_AWS_30: "Query logging deshabilitado para ahorrar costos de CloudWatch."
   identifier = "${local.name_prefix}-postgres"
 
   # Motor y versión

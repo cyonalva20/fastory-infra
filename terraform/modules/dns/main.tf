@@ -16,6 +16,8 @@ locals {
 # Zona donde se gestionan los registros DNS del dominio.
 
 resource "aws_route53_zone" "main" {
+  # checkov:skip=CKV2_AWS_39: "DNS Query Logging deshabilitado para ahorrar costos."
+  # checkov:skip=CKV2_AWS_38: "DNSSEC no requerido para demo."
   count = var.enable_custom_domain ? 1 : 0
 
   name    = var.domain_name
@@ -32,6 +34,7 @@ resource "aws_route53_zone" "main" {
 # Apunta fastory.com al CDN de CloudFront.
 
 resource "aws_route53_record" "root" {
+  # checkov:skip=CKV2_AWS_23: "Falso positivo de Checkov con alias a CloudFront."
   count = var.enable_custom_domain ? 1 : 0
 
   zone_id = aws_route53_zone.main[0].zone_id
@@ -51,6 +54,7 @@ resource "aws_route53_record" "root" {
 # Apunta www.fastory.com al mismo CDN de CloudFront.
 
 resource "aws_route53_record" "www" {
+  # checkov:skip=CKV2_AWS_23: "Falso positivo de Checkov con alias a CloudFront."
   count = var.enable_custom_domain ? 1 : 0
 
   zone_id = aws_route53_zone.main[0].zone_id
@@ -70,6 +74,7 @@ resource "aws_route53_record" "www" {
 # Apunta api.fastory.com al CDN (que redirige /api/* al ALB).
 
 resource "aws_route53_record" "api" {
+  # checkov:skip=CKV2_AWS_23: "Falso positivo de Checkov con alias a CloudFront."
   count = var.enable_custom_domain ? 1 : 0
 
   zone_id = aws_route53_zone.main[0].zone_id
