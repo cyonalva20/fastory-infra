@@ -56,29 +56,28 @@ output "s3_website_url" {
 }
 
 # ── ECS / ECR (Día 2) ───────────────────────
-# Estos outputs se habilitarán cuando se creen los módulos:
-#
-# output "ecr_repository_url" {
-#   description = "URL del repositorio ECR del backend"
-#   value       = module.ecr.repository_url
-# }
-#
-# output "ecs_cluster_name" {
-#   description = "Nombre del cluster ECS"
-#   value       = module.ecs.cluster_name
-# }
-#
-# output "ecs_service_name" {
-#   description = "Nombre del servicio ECS del backend"
-#   value       = module.ecs.service_name
-# }
-#
-# output "alb_dns_name" {
-#   description = "URL del ALB (acceso al backend y Grafana)"
-#   value       = module.ecs.alb_dns_name
-# }
-#
-# output "grafana_url" {
-#   description = "URL de Grafana (observabilidad)"
-#   value       = module.observability.grafana_url
-# }
+
+output "ecr_repository_url" {
+  description = "URL del repositorio ECR del backend"
+  value       = module.ecr.backend_repository_url
+}
+
+output "ecs_cluster_name" {
+  description = "Nombre del cluster ECS"
+  value       = module.ecs.cluster_name
+}
+
+output "ecs_service_name" {
+  description = "Nombre del servicio ECS del backend"
+  value       = module.ecs.service_name
+}
+
+output "alb_dns_name" {
+  description = "URL del ALB (acceso al backend y Grafana)"
+  value       = module.ecs.alb_dns_name
+}
+
+output "grafana_url" {
+  description = "URL de Grafana (observabilidad)"
+  value       = "http://${module.ecs.alb_dns_name}/grafana/"
+}

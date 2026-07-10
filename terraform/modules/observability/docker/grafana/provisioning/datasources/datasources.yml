@@ -1,0 +1,11 @@
+apiVersion: 1
+datasources:
+  - name: Prometheus
+    type: prometheus
+    url: http://prometheus.fastory.local:9090
+    isDefault: true
+    access: proxy
+  - name: Loki
+    type: loki
+    url: http://loki.fastory.local:3100
+    access: proxy
