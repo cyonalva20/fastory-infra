@@ -1,7 +1,8 @@
 # ──────────────────────────────────────────────
-# Módulo Security — Fastory
+# Módulo Security — Fastory (ECS Fargate)
 # ──────────────────────────────────────────────
-# Recursos: Security Groups, KMS Key, Secrets Manager
+# Recursos: Security Groups (ALB, ECS, RDS, EFS,
+# Observability), KMS Key, Secrets Manager.
 # ──────────────────────────────────────────────
 
 locals {
@@ -12,8 +13,9 @@ locals {
 # 1. SECURITY GROUP — ALB (Application Load Balancer)
 # ════════════════════════════════════════════════
 # Permite tráfico HTTP/HTTPS desde internet.
+# Egress hacia las tareas ECS Fargate y Grafana.
 
-#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia al ALB en el modulo compute
+#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia al ALB en el modulo ecs
 resource "aws_security_group" "alb" {
   # checkov:skip=CKV_AWS_260: "Ingress HTTP 80 requerido para ALB publico sin HTTPS."
   name        = "${local.name_prefix}-alb-sg"
@@ -38,11 +40,19 @@ resource "aws_security_group" "alb" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 
-  # [FIX CKV_AWS_382] Egress restringido al puerto de la app
+  # Egress hacia tareas ECS (Backend 8080 + Grafana 3000)
   egress {
-    description = "Trafico hacia instancias EC2"
+    description = "Trafico hacia tareas ECS Fargate"
     from_port   = var.app_port
     to_port     = var.app_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "Trafico hacia Grafana"
+    from_port   = 3000
+    to_port     = 3000
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
@@ -53,14 +63,15 @@ resource "aws_security_group" "alb" {
 }
 
 # ════════════════════════════════════════════════
-# 2. SECURITY GROUP — EC2 (Instancias de la App)
+# 2. SECURITY GROUP — ECS Fargate (Tareas del Backend)
 # ════════════════════════════════════════════════
 # Solo permite tráfico desde el ALB en el puerto de la app.
+# Egress hacia RDS, HTTPS (ECR/Secrets), y stack de observabilidad.
 
-resource "aws_security_group" "ec2" {
-  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a EC2 en el modulo compute."
-  name        = "${local.name_prefix}-ec2-sg"
-  description = "Security Group para las instancias EC2 del ASG"
+resource "aws_security_group" "ecs" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a las tareas ECS en el modulo ecs."
+  name        = "${local.name_prefix}-ecs-sg"
+  description = "Security Group para las tareas ECS Fargate del backend"
   vpc_id      = var.vpc_id
 
   # Tráfico desde el ALB al puerto de la app (Spring Boot 8080)
@@ -72,15 +83,25 @@ resource "aws_security_group" "ec2" {
     security_groups = [aws_security_group.alb.id]
   }
 
-  # [FIX CKV_AWS_382] Egress restringido a puertos específicos
+  # Prometheus scraping desde el SG de observabilidad
+  ingress {
+    description     = "Prometheus scraping desde observabilidad"
+    from_port       = var.app_port
+    to_port         = var.app_port
+    protocol        = "tcp"
+    security_groups = [aws_security_group.observability.id]
+  }
+
+  # HTTPS para ECR pull, Secrets Manager, CloudWatch Logs
   egress {
-    description = "HTTPS para descargar dependencias"
+    description = "HTTPS para servicios AWS (ECR, Secrets, Logs)"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
 
+  # PostgreSQL hacia RDS
   egress {
     description = "PostgreSQL hacia RDS"
     from_port   = var.db_port
@@ -89,23 +110,41 @@ resource "aws_security_group" "ec2" {
     cidr_blocks = [var.vpc_cidr]
   }
 
+  # Logs hacia Loki (observabilidad)
   egress {
-    description = "Redis hacia ElastiCache"
-    from_port   = var.redis_port
-    to_port     = var.redis_port
+    description = "Logs hacia Loki"
+    from_port   = 3100
+    to_port     = 3100
     protocol    = "tcp"
     cidr_blocks = [var.vpc_cidr]
   }
 
+  # DNS para Service Discovery (Cloud Map)
+  egress {
+    description = "DNS para Service Discovery"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "DNS UDP para Service Discovery"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
   tags = {
-    Name = "${local.name_prefix}-ec2-sg"
+    Name = "${local.name_prefix}-ecs-sg"
   }
 }
 
 # ════════════════════════════════════════════════
 # 3. SECURITY GROUP — RDS (Base de Datos PostgreSQL)
 # ════════════════════════════════════════════════
-# Solo permite tráfico desde las instancias EC2 en el puerto 5432.
+# Solo permite tráfico desde las tareas ECS Fargate en el puerto 5432.
 
 resource "aws_security_group" "rds" {
   # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a RDS en el modulo database."
@@ -113,13 +152,13 @@ resource "aws_security_group" "rds" {
   description = "Security Group para RDS PostgreSQL"
   vpc_id      = var.vpc_id
 
-  # PostgreSQL solo desde EC2
+  # PostgreSQL solo desde ECS Fargate
   ingress {
-    description     = "PostgreSQL desde EC2"
+    description     = "PostgreSQL desde ECS Fargate"
     from_port       = var.db_port
     to_port         = var.db_port
     protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
+    security_groups = [aws_security_group.ecs.id]
   }
 
   # [FIX CKV_AWS_382] Egress restringido a la VPC
@@ -137,26 +176,26 @@ resource "aws_security_group" "rds" {
 }
 
 # ════════════════════════════════════════════════
-# 4. SECURITY GROUP — ElastiCache Redis
+# 4. SECURITY GROUP — EFS (Persistencia Observabilidad)
 # ════════════════════════════════════════════════
-# Solo permite tráfico desde las instancias EC2 en el puerto 6379.
+# Permite NFS (2049) desde las tareas de observabilidad.
 
-resource "aws_security_group" "redis" {
-  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a ElastiCache en el modulo cache."
-  name        = "${local.name_prefix}-redis-sg"
-  description = "Security Group para ElastiCache Redis"
+resource "aws_security_group" "efs" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a los mount targets en el modulo efs."
+  name        = "${local.name_prefix}-efs-sg"
+  description = "Security Group para EFS (persistencia de Grafana y Loki)"
   vpc_id      = var.vpc_id
 
-  # Redis solo desde EC2
+  # NFS desde tareas de observabilidad
   ingress {
-    description     = "Redis desde EC2"
-    from_port       = var.redis_port
-    to_port         = var.redis_port
+    description     = "NFS desde observabilidad"
+    from_port       = 2049
+    to_port         = 2049
     protocol        = "tcp"
-    security_groups = [aws_security_group.ec2.id]
+    security_groups = [aws_security_group.observability.id]
   }
 
-  # [FIX CKV_AWS_382] Egress restringido a la VPC
+  # [FIX CKV_AWS_382] Egress restringido
   egress {
     description = "Respuestas dentro de la VPC"
     from_port   = 443
@@ -166,12 +205,134 @@ resource "aws_security_group" "redis" {
   }
 
   tags = {
-    Name = "${local.name_prefix}-redis-sg"
+    Name = "${local.name_prefix}-efs-sg"
   }
 }
 
 # ════════════════════════════════════════════════
-# 5. KMS KEY — Cifrado de Secrets
+# 5. SECURITY GROUP — Observabilidad (Prometheus, Loki, Grafana)
+# ════════════════════════════════════════════════
+# Permite comunicación entre los servicios de observabilidad
+# y acceso desde el ALB hacia Grafana.
+
+resource "aws_security_group" "observability" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a las tareas de observabilidad en el modulo observability."
+  name        = "${local.name_prefix}-observability-sg"
+  description = "Security Group para el stack de observabilidad (Prometheus, Loki, Grafana)"
+  vpc_id      = var.vpc_id
+
+  # Grafana desde ALB
+  ingress {
+    description     = "Grafana desde ALB"
+    from_port       = 3000
+    to_port         = 3000
+    protocol        = "tcp"
+    security_groups = [aws_security_group.alb.id]
+  }
+
+  # Prometheus desde la propia red de observabilidad (Grafana queries)
+  ingress {
+    description = "Prometheus queries internas"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # Loki desde la propia red (Grafana queries + Fluent Bit push)
+  ingress {
+    description = "Loki queries y push internas"
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # Loki push desde ECS backend (Fluent Bit sidecar)
+  ingress {
+    description = "Loki push desde ECS backend (FireLens)"
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  # HTTPS para ECR pull, CloudWatch Logs
+  egress {
+    description = "HTTPS para servicios AWS"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  # Prometheus scraping al backend
+  egress {
+    description = "Prometheus scraping al backend"
+    from_port   = var.app_port
+    to_port     = var.app_port
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  # Comunicación interna entre servicios de observabilidad
+  egress {
+    description = "Comunicacion interna observabilidad"
+    from_port   = 3000
+    to_port     = 3000
+    protocol    = "tcp"
+    self        = true
+  }
+
+  egress {
+    description = "Prometheus interno"
+    from_port   = 9090
+    to_port     = 9090
+    protocol    = "tcp"
+    self        = true
+  }
+
+  egress {
+    description = "Loki interno"
+    from_port   = 3100
+    to_port     = 3100
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # NFS hacia EFS
+  egress {
+    description = "NFS hacia EFS"
+    from_port   = 2049
+    to_port     = 2049
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  # DNS para Service Discovery (Cloud Map)
+  egress {
+    description = "DNS para Service Discovery"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    description = "DNS UDP para Service Discovery"
+    from_port   = 53
+    to_port     = 53
+    protocol    = "udp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  tags = {
+    Name = "${local.name_prefix}-observability-sg"
+  }
+}
+
+# ════════════════════════════════════════════════
+# 6. KMS KEY — Cifrado de Secrets
 # ════════════════════════════════════════════════
 # Customer Managed Key para cifrar secretos en Secrets Manager.
 
@@ -206,7 +367,7 @@ resource "aws_kms_alias" "main" {
 }
 
 # ════════════════════════════════════════════════
-# 6. SECRETS MANAGER — Credenciales de la aplicación
+# 7. SECRETS MANAGER — Credenciales de la aplicación
 # ════════════════════════════════════════════════
 # Solo se crean los "cascarones"; los valores reales se
 # inyectan manualmente o por variables después.

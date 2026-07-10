@@ -2,7 +2,7 @@
 # Outputs Globales — Fastory
 # ──────────────────────────────────────────────
 # Valores finales que se muestran después del terraform apply.
-# Útiles para configurar el backend, Ansible y el pipeline.
+# Útiles para el pipeline CI/CD y verificación.
 # ──────────────────────────────────────────────
 
 # ── Entorno ──────────────────────────────────
@@ -29,13 +29,6 @@ output "vpc_id" {
   value       = module.networking.vpc_id
 }
 
-# ── Compute ──────────────────────────────────
-
-output "alb_dns_name" {
-  description = "URL del Application Load Balancer (acceso al backend)"
-  value       = module.compute.alb_dns_name
-}
-
 # ── Database ─────────────────────────────────
 
 output "db_endpoint" {
@@ -50,38 +43,42 @@ output "rds_proxy_endpoint" {
   sensitive   = true
 }
 
-# ── Cache ────────────────────────────────────
-
-output "redis_endpoint" {
-  description = "Endpoint del cluster ElastiCache Redis"
-  value       = module.cache.redis_endpoint
-  sensitive   = true
-}
-
-# ── Messaging ────────────────────────────────
-
-output "sqs_queue_url" {
-  description = "URL de la cola SQS principal"
-  value       = module.messaging.queue_url
-}
-
-# ── CDN ──────────────────────────────────────
-
-/*
-output "cloudfront_url" {
-  description = "URL del CDN CloudFront (acceso al frontend)"
-  value       = module.cdn.cloudfront_domain_name
-}
-*/
-
-output "s3_website_url" {
-  description = "URL del S3 Bucket (acceso directo al frontend para demo)"
-  value       = module.storage.frontend_website_endpoint
-}
-
 # ── Storage ──────────────────────────────────
 
 output "frontend_bucket" {
   description = "ID del bucket S3 del frontend"
   value       = module.storage.frontend_bucket_id
 }
+
+output "s3_website_url" {
+  description = "URL del S3 Bucket (acceso directo al frontend)"
+  value       = module.storage.frontend_website_endpoint
+}
+
+# ── ECS / ECR (Día 2) ───────────────────────
+# Estos outputs se habilitarán cuando se creen los módulos:
+#
+# output "ecr_repository_url" {
+#   description = "URL del repositorio ECR del backend"
+#   value       = module.ecr.repository_url
+# }
+#
+# output "ecs_cluster_name" {
+#   description = "Nombre del cluster ECS"
+#   value       = module.ecs.cluster_name
+# }
+#
+# output "ecs_service_name" {
+#   description = "Nombre del servicio ECS del backend"
+#   value       = module.ecs.service_name
+# }
+#
+# output "alb_dns_name" {
+#   description = "URL del ALB (acceso al backend y Grafana)"
+#   value       = module.ecs.alb_dns_name
+# }
+#
+# output "grafana_url" {
+#   description = "URL de Grafana (observabilidad)"
+#   value       = module.observability.grafana_url
+# }

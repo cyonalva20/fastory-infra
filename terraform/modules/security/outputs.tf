@@ -2,7 +2,8 @@
 # Outputs — Módulo Security
 # ──────────────────────────────────────────────
 # Estos valores se exponen al root module para que
-# otros módulos (compute, database, etc.) puedan referenciarlos.
+# otros módulos (ecs, database, observability, etc.)
+# puedan referenciarlos.
 # ──────────────────────────────────────────────
 
 # ── Security Groups ──────────────────────────
@@ -12,9 +13,9 @@ output "alb_security_group_id" {
   value       = aws_security_group.alb.id
 }
 
-output "ec2_security_group_id" {
-  description = "ID del Security Group de las instancias EC2"
-  value       = aws_security_group.ec2.id
+output "ecs_security_group_id" {
+  description = "ID del Security Group de las tareas ECS Fargate"
+  value       = aws_security_group.ecs.id
 }
 
 output "rds_security_group_id" {
@@ -22,9 +23,14 @@ output "rds_security_group_id" {
   value       = aws_security_group.rds.id
 }
 
-output "redis_security_group_id" {
-  description = "ID del Security Group de ElastiCache Redis"
-  value       = aws_security_group.redis.id
+output "efs_security_group_id" {
+  description = "ID del Security Group de EFS"
+  value       = aws_security_group.efs.id
+}
+
+output "observability_security_group_id" {
+  description = "ID del Security Group del stack de observabilidad"
+  value       = aws_security_group.observability.id
 }
 
 # ── KMS ──────────────────────────────────────

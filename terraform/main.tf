@@ -1,5 +1,6 @@
 # ──────────────────────────────────────────────
 # Terraform Configuration — Fastory
+# Arquitectura: 100% Serverless (ECS Fargate)
 # ──────────────────────────────────────────────
 
 terraform {
@@ -53,8 +54,8 @@ module "networking" {
 # ════════════════════════════════════════════════
 # MÓDULO 2: SECURITY
 # ════════════════════════════════════════════════
-# Security Groups (ALB, EC2, RDS, Redis),
-# KMS Key y Secrets Manager.
+# Security Groups (ALB, ECS Fargate, RDS, EFS,
+# Observabilidad), KMS Key y Secrets Manager.
 
 module "security" {
   source = "./modules/security"
@@ -83,85 +84,9 @@ module "database" {
 }
 
 # ════════════════════════════════════════════════
-# MÓDULO 4: COMPUTE (ALB + EC2 + ASG)
+# MÓDULO 4: STORAGE (S3 Frontend)
 # ════════════════════════════════════════════════
-# Application Load Balancer, Launch Template con Docker
-# y X-Ray, Auto Scaling Group con IAM roles.
-
-module "compute" {
-  source = "./modules/compute"
-
-  project_name          = var.project_name
-  environment           = var.environment
-  vpc_id                = module.networking.vpc_id
-  public_subnet_ids     = module.networking.public_subnet_ids
-  private_subnet_ids    = module.networking.private_subnet_ids
-  alb_security_group_id = module.security.alb_security_group_id
-  ec2_security_group_id = module.security.ec2_security_group_id
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 5: CACHE (ElastiCache Redis)
-# ════════════════════════════════════════════════
-# Cluster Redis para caché de aplicación y sesiones.
-
-module "cache" {
-  source = "./modules/cache"
-
-  project_name            = var.project_name
-  environment             = var.environment
-  private_subnet_ids      = module.networking.private_subnet_ids
-  redis_security_group_id = module.security.redis_security_group_id
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 6: MESSAGING (SQS)
-# ════════════════════════════════════════════════
-# Cola SQS con Dead Letter Queue para procesamiento
-# asíncrono de mensajes, cifrada con KMS.
-
-module "messaging" {
-  source = "./modules/messaging"
-
-  project_name = var.project_name
-  environment  = var.environment
-  kms_key_arn  = module.security.kms_key_arn
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 7: BACKUP (AWS Backup)
-# ════════════════════════════════════════════════
-# Vault de respaldo con plan diario y selección
-# automática por tag (Backup=True).
-
-module "backup" {
-  source = "./modules/backup"
-
-  project_name = var.project_name
-  environment  = var.environment
-  kms_key_arn  = module.security.kms_key_arn
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 8: MONITORING (CloudWatch + SNS)
-# ════════════════════════════════════════════════
-# Alarmas de CloudWatch para CPU del ASG y hosts
-# no saludables del ALB, con notificaciones via SNS.
-
-module "monitoring" {
-  source = "./modules/monitoring"
-
-  project_name            = var.project_name
-  environment             = var.environment
-  asg_name                = module.compute.asg_name
-  alb_arn_suffix          = module.compute.alb_arn_suffix
-  target_group_arn_suffix = module.compute.target_group_arn_suffix
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 9: STORAGE (S3 Frontend)
-# ════════════════════════════════════════════════
-# Bucket S3 para alojar el frontend estático
+# Bucket S3 para alojar el frontend estático (React SPA)
 # con versionamiento y cifrado.
 
 module "storage" {
@@ -172,39 +97,27 @@ module "storage" {
 }
 
 # ════════════════════════════════════════════════
-# MÓDULO 10: CDN (CloudFront + ACM + WAF)
+# MÓDULO 5: MONITORING (CloudWatch + SNS)
 # ════════════════════════════════════════════════
-# CDN global con doble origen (S3 frontend + ALB API).
-# ACM y WAF se activan solo con dominio personalizado.
-# NOTA: Comentado para la demo por restricciones de cuenta nueva en AWS.
+# Alarmas de CloudWatch para ECS Fargate y ALB,
+# con notificaciones via SNS.
+# NOTA: Se actualizará en el Día 2 cuando se creen
+# los módulos de ECS y Observabilidad.
 
-/*
-module "cdn" {
-  source = "./modules/cdn"
-
-  project_name                   = var.project_name
-  environment                    = var.environment
-  enable_custom_domain           = var.enable_custom_domain
-  s3_frontend_bucket_domain_name = module.storage.frontend_bucket_domain_name
-  s3_frontend_bucket_id          = module.storage.frontend_bucket_id
-  alb_dns_name                   = module.compute.alb_dns_name
-}
-*/
+# module "monitoring" {
+#   source = "./modules/monitoring"
+#
+#   project_name = var.project_name
+#   environment  = var.environment
+#   # Se reconectará con los recursos ECS en el Día 2
+# }
 
 # ════════════════════════════════════════════════
-# MÓDULO 11: DNS (Route 53)
+# MÓDULOS DÍA 2 (Placeholders)
 # ════════════════════════════════════════════════
-# Hosted Zone y registros DNS para el dominio personalizado.
-# Se activa solo con enable_custom_domain = true.
-# NOTA: Comentado porque depende del CDN.
-
-/*
-module "dns" {
-  source = "./modules/dns"
-
-  project_name           = var.project_name
-  environment            = var.environment
-  enable_custom_domain   = var.enable_custom_domain
-  cloudfront_domain_name = "" # module.cdn.cloudfront_domain_name
-}
-*/
+# Los siguientes módulos se implementarán en el Día 2:
+#
+# module "ecr" { }           — Repositorios de imágenes Docker
+# module "efs" { }           — Persistencia para Grafana y Loki
+# module "ecs" { }           — Cluster, Task Definitions, Services
+# module "observability" { } — Prometheus, Loki, Grafana en Fargate

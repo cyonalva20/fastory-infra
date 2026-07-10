@@ -3,8 +3,15 @@ name: Destroy Infrastructure
 on:
   workflow_dispatch:
     inputs:
+      environment:
+        description: "Entorno a destruir (dev o prod)"
+        required: true
+        type: choice
+        options:
+          - dev
+          - prod
       confirm:
-        description: 'Escribe "DESTROY" para confirmar la destrucción total de la infraestructura'
+        description: 'Escribe "DESTROY" para confirmar la destrucción total'
         required: true
         default: ''
 
@@ -18,10 +25,10 @@ env:
 
 jobs:
   terraform-destroy:
-    name: "Terraform Destroy"
+    name: "Terraform Destroy (${{ inputs.environment }})"
     runs-on: ubuntu-latest
     if: github.event.inputs.confirm == 'DESTROY'
-    environment: production
+    environment: ${{ inputs.environment }}
 
     steps:
       - name: Checkout código
@@ -40,8 +47,14 @@ jobs:
 
       - name: Terraform Init
         working-directory: ${{ env.WORKING_DIR }}
-        run: terraform init
+        run: terraform init -input=false
+
+      - name: Terraform Workspace
+        working-directory: ${{ env.WORKING_DIR }}
+        run: terraform workspace select ${{ inputs.environment }}
 
       - name: Terraform Destroy
         working-directory: ${{ env.WORKING_DIR }}
-        run: terraform destroy -auto-approve -input=false
+        run: |
+          terraform destroy -auto-approve -input=false \
+            -var-file=environments/${{ inputs.environment }}.tfvars
