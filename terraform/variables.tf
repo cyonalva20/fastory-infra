@@ -1,6 +1,9 @@
 # ──────────────────────────────────────────────
 # Variables Globales — Fastory
 # ──────────────────────────────────────────────
+# Estos valores se sobreescriben desde los archivos
+# environments/dev.tfvars o environments/prod.tfvars
+# ──────────────────────────────────────────────
 
 variable "aws_region" {
   description = "Región de AWS donde se desplegará la infraestructura"
@@ -15,13 +18,12 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Entorno de despliegue (production, staging, development)"
+  description = "Entorno de despliegue (dev, prod)"
   type        = string
-  default     = "production"
 
   validation {
-    condition     = contains(["production", "staging", "development"], var.environment)
-    error_message = "El entorno debe ser: production, staging o development."
+    condition     = contains(["dev", "prod"], var.environment)
+    error_message = "El entorno debe ser: dev o prod."
   }
 }
 
@@ -64,11 +66,29 @@ variable "aws_account_id" {
 }
 
 # ──────────────────────────────────────────────
-# Dominio personalizado (CDN + DNS)
+# ECS Fargate
 # ──────────────────────────────────────────────
 
-variable "enable_custom_domain" {
-  description = "Habilitar dominio personalizado (ACM, WAF, Route 53). Desactivado para evitar costos."
+variable "backend_cpu" {
+  description = "CPU units para la tarea del backend (256 = 0.25 vCPU)"
+  type        = number
+  default     = 256
+}
+
+variable "backend_memory" {
+  description = "Memoria en MB para la tarea del backend"
+  type        = number
+  default     = 512
+}
+
+variable "backend_desired_count" {
+  description = "Número deseado de tareas del backend en ejecución"
+  type        = number
+  default     = 1
+}
+
+variable "use_fargate_spot" {
+  description = "Usar Fargate Spot para ahorrar costos (hasta 70% descuento)"
   type        = bool
-  default     = false
+  default     = true
 }

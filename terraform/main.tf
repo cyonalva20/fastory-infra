@@ -1,5 +1,6 @@
 # ──────────────────────────────────────────────
 # Terraform Configuration — Fastory
+# Arquitectura: 100% Serverless (ECS Fargate)
 # ──────────────────────────────────────────────
 
 terraform {
@@ -53,8 +54,8 @@ module "networking" {
 # ════════════════════════════════════════════════
 # MÓDULO 2: SECURITY
 # ════════════════════════════════════════════════
-# Security Groups (ALB, EC2, RDS, Redis),
-# KMS Key y Secrets Manager.
+# Security Groups (ALB, ECS Fargate, RDS, EFS,
+# Observabilidad), KMS Key y Secrets Manager.
 
 module "security" {
   source = "./modules/security"
@@ -83,85 +84,9 @@ module "database" {
 }
 
 # ════════════════════════════════════════════════
-# MÓDULO 4: COMPUTE (ALB + EC2 + ASG)
+# MÓDULO 4: STORAGE (S3 Frontend)
 # ════════════════════════════════════════════════
-# Application Load Balancer, Launch Template con Docker
-# y X-Ray, Auto Scaling Group con IAM roles.
-
-module "compute" {
-  source = "./modules/compute"
-
-  project_name          = var.project_name
-  environment           = var.environment
-  vpc_id                = module.networking.vpc_id
-  public_subnet_ids     = module.networking.public_subnet_ids
-  private_subnet_ids    = module.networking.private_subnet_ids
-  alb_security_group_id = module.security.alb_security_group_id
-  ec2_security_group_id = module.security.ec2_security_group_id
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 5: CACHE (ElastiCache Redis)
-# ════════════════════════════════════════════════
-# Cluster Redis para caché de aplicación y sesiones.
-
-module "cache" {
-  source = "./modules/cache"
-
-  project_name            = var.project_name
-  environment             = var.environment
-  private_subnet_ids      = module.networking.private_subnet_ids
-  redis_security_group_id = module.security.redis_security_group_id
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 6: MESSAGING (SQS)
-# ════════════════════════════════════════════════
-# Cola SQS con Dead Letter Queue para procesamiento
-# asíncrono de mensajes, cifrada con KMS.
-
-module "messaging" {
-  source = "./modules/messaging"
-
-  project_name = var.project_name
-  environment  = var.environment
-  kms_key_arn  = module.security.kms_key_arn
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 7: BACKUP (AWS Backup)
-# ════════════════════════════════════════════════
-# Vault de respaldo con plan diario y selección
-# automática por tag (Backup=True).
-
-module "backup" {
-  source = "./modules/backup"
-
-  project_name = var.project_name
-  environment  = var.environment
-  kms_key_arn  = module.security.kms_key_arn
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 8: MONITORING (CloudWatch + SNS)
-# ════════════════════════════════════════════════
-# Alarmas de CloudWatch para CPU del ASG y hosts
-# no saludables del ALB, con notificaciones via SNS.
-
-module "monitoring" {
-  source = "./modules/monitoring"
-
-  project_name            = var.project_name
-  environment             = var.environment
-  asg_name                = module.compute.asg_name
-  alb_arn_suffix          = module.compute.alb_arn_suffix
-  target_group_arn_suffix = module.compute.target_group_arn_suffix
-}
-
-# ════════════════════════════════════════════════
-# MÓDULO 9: STORAGE (S3 Frontend)
-# ════════════════════════════════════════════════
-# Bucket S3 para alojar el frontend estático
+# Bucket S3 para alojar el frontend estático (React SPA)
 # con versionamiento y cifrado.
 
 module "storage" {
@@ -172,39 +97,96 @@ module "storage" {
 }
 
 # ════════════════════════════════════════════════
-# MÓDULO 10: CDN (CloudFront + ACM + WAF)
+# MÓDULO 5: MONITORING (CloudWatch + SNS)
 # ════════════════════════════════════════════════
-# CDN global con doble origen (S3 frontend + ALB API).
-# ACM y WAF se activan solo con dominio personalizado.
-# NOTA: Comentado para la demo por restricciones de cuenta nueva en AWS.
+# Alarmas de CloudWatch para ECS Fargate y ALB,
+# con notificaciones via SNS.
+# NOTA: Se actualizará en el Día 2 cuando se creen
+# los módulos de ECS y Observabilidad.
 
-/*
-module "cdn" {
-  source = "./modules/cdn"
+# ════════════════════════════════════════════════
+# MÓDULO 9: MONITORING (CloudWatch)
+# ════════════════════════════════════════════════
+module "monitoring" {
+  source = "./modules/monitoring"
 
-  project_name                   = var.project_name
-  environment                    = var.environment
-  enable_custom_domain           = var.enable_custom_domain
-  s3_frontend_bucket_domain_name = module.storage.frontend_bucket_domain_name
-  s3_frontend_bucket_id          = module.storage.frontend_bucket_id
-  alb_dns_name                   = module.compute.alb_dns_name
+  project_name     = var.project_name
+  environment      = var.environment
+  ecs_cluster_name = module.ecs.cluster_name
+  ecs_service_name = module.ecs.service_name
+  alb_arn_suffix   = module.ecs.alb_arn_suffix
 }
-*/
 
 # ════════════════════════════════════════════════
-# MÓDULO 11: DNS (Route 53)
+# MÓDULO 5: ECR (Elastic Container Registry)
 # ════════════════════════════════════════════════
-# Hosted Zone y registros DNS para el dominio personalizado.
-# Se activa solo con enable_custom_domain = true.
-# NOTA: Comentado porque depende del CDN.
 
-/*
-module "dns" {
-  source = "./modules/dns"
+module "ecr" {
+  source = "./modules/ecr"
 
-  project_name           = var.project_name
-  environment            = var.environment
-  enable_custom_domain   = var.enable_custom_domain
-  cloudfront_domain_name = "" # module.cdn.cloudfront_domain_name
+  project_name = var.project_name
+  environment  = var.environment
+  kms_key_arn  = module.security.kms_key_arn
 }
-*/
+
+# ════════════════════════════════════════════════
+# MÓDULO 6: EFS (Elastic File System)
+# ════════════════════════════════════════════════
+
+module "efs" {
+  source = "./modules/efs"
+
+  project_name          = var.project_name
+  environment           = var.environment
+  kms_key_arn           = module.security.kms_key_arn
+  private_subnet_ids    = module.networking.private_subnet_ids
+  efs_security_group_id = module.security.efs_security_group_id
+}
+
+# ════════════════════════════════════════════════
+# MÓDULO 7: ECS CORE (Backend)
+# ════════════════════════════════════════════════
+
+module "ecs" {
+  source = "./modules/ecs"
+
+  project_name              = var.project_name
+  environment               = var.environment
+  vpc_id                    = module.networking.vpc_id
+  public_subnet_ids         = module.networking.public_subnet_ids
+  private_subnet_ids        = module.networking.private_subnet_ids
+  alb_security_group_id     = module.security.alb_security_group_id
+  ecs_security_group_id     = module.security.ecs_security_group_id
+  backend_repository_url    = module.ecr.backend_repository_url
+  backend_cpu               = var.backend_cpu
+  backend_memory            = var.backend_memory
+  backend_desired_count     = var.backend_desired_count
+  use_fargate_spot          = var.use_fargate_spot
+  db_credentials_secret_arn = module.security.db_credentials_secret_arn
+  jwt_secret_arn            = module.security.jwt_secret_arn
+  kms_key_arn               = module.security.kms_key_arn
+}
+
+# ════════════════════════════════════════════════
+# MÓDULO 8: OBSERVABILITY (Prometheus, Loki, Grafana)
+# ════════════════════════════════════════════════
+
+module "observability" {
+  source = "./modules/observability"
+
+  project_name                    = var.project_name
+  environment                     = var.environment
+  vpc_id                          = module.networking.vpc_id
+  private_subnet_ids              = module.networking.private_subnet_ids
+  observability_security_group_id = module.security.observability_security_group_id
+  ecs_cluster_id                  = module.ecs.cluster_id
+  cloudmap_namespace_id           = module.ecs.cloudmap_namespace_id
+  efs_file_system_id              = module.efs.file_system_id
+  efs_grafana_access_point_id     = module.efs.grafana_access_point_id
+  efs_loki_access_point_id        = module.efs.loki_access_point_id
+  grafana_repository_url          = module.ecr.grafana_repository_url
+  prometheus_repository_url       = module.ecr.prometheus_repository_url
+  loki_repository_url             = module.ecr.loki_repository_url
+  alb_listener_arn                = module.ecs.alb_listener_arn
+  kms_key_arn                     = module.security.kms_key_arn
+}

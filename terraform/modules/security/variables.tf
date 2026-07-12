@@ -8,7 +8,7 @@ variable "project_name" {
 }
 
 variable "environment" {
-  description = "Entorno de despliegue (production, staging, development)"
+  description = "Entorno de despliegue (dev, prod)"
   type        = string
 }
 
@@ -40,12 +40,6 @@ variable "db_port" {
   description = "Puerto de la base de datos PostgreSQL"
   type        = number
   default     = 5432
-}
-
-variable "redis_port" {
-  description = "Puerto de ElastiCache Redis"
-  type        = number
-  default     = 6379
 }
 
 # ──────────────────────────────────────────────
