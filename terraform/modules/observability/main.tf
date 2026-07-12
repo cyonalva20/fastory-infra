@@ -48,7 +48,8 @@ resource "aws_iam_role" "obs_task" {
 
 resource "aws_cloudwatch_log_group" "prometheus" {
   name              = "/ecs/${local.name_prefix}-prometheus"
-  retention_in_days = 7
+  retention_in_days = 365
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_ecs_task_definition" "prometheus" {
@@ -61,9 +62,10 @@ resource "aws_ecs_task_definition" "prometheus" {
   task_role_arn            = aws_iam_role.obs_task.arn
 
   container_definitions = jsonencode([{
-    name      = "prometheus"
-    image     = "${var.prometheus_repository_url}:latest"
-    essential = true
+    name                   = "prometheus"
+    image                  = "${var.prometheus_repository_url}:latest"
+    essential              = true
+    readonlyRootFilesystem = true
     portMappings = [{
       containerPort = 9090
       protocol      = "tcp"
@@ -114,7 +116,8 @@ resource "aws_ecs_service" "prometheus" {
 
 resource "aws_cloudwatch_log_group" "loki" {
   name              = "/ecs/${local.name_prefix}-loki"
-  retention_in_days = 7
+  retention_in_days = 365
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_ecs_task_definition" "loki" {
@@ -139,9 +142,10 @@ resource "aws_ecs_task_definition" "loki" {
   }
 
   container_definitions = jsonencode([{
-    name      = "loki"
-    image     = "${var.loki_repository_url}:latest"
-    essential = true
+    name                   = "loki"
+    image                  = "${var.loki_repository_url}:latest"
+    essential              = true
+    readonlyRootFilesystem = true
     portMappings = [{
       containerPort = 3100
       protocol      = "tcp"
@@ -196,10 +200,12 @@ resource "aws_ecs_service" "loki" {
 
 resource "aws_cloudwatch_log_group" "grafana" {
   name              = "/ecs/${local.name_prefix}-grafana"
-  retention_in_days = 7
+  retention_in_days = 365
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_lb_target_group" "grafana" {
+  # checkov:skip=CKV_AWS_378: "Internal ALB-to-Fargate traffic uses HTTP, no TLS termination needed"
   name        = "${local.name_prefix}-grafana-tg"
   port        = 3000
   protocol    = "HTTP"
@@ -254,9 +260,10 @@ resource "aws_ecs_task_definition" "grafana" {
   }
 
   container_definitions = jsonencode([{
-    name      = "grafana"
-    image     = "${var.grafana_repository_url}:latest"
-    essential = true
+    name                   = "grafana"
+    image                  = "${var.grafana_repository_url}:latest"
+    essential              = true
+    readonlyRootFilesystem = true
     environment = [
       { name = "GF_SERVER_ROOT_URL", value = "%(protocol)s://%(domain)s:%(http_port)s/grafana/" },
       { name = "GF_SERVER_SERVE_FROM_SUB_PATH", value = "true" }

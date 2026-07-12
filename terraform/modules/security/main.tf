@@ -15,8 +15,8 @@ locals {
 # Permite tráfico HTTP/HTTPS desde internet.
 # Egress hacia las tareas ECS Fargate y Grafana.
 
-#checkov:skip=CKV2_AWS_5:Falso positivo. El SG se asocia al ALB en el modulo ecs
 resource "aws_security_group" "alb" {
+  # checkov:skip=CKV2_AWS_5: "SG se asocia al ALB en el modulo ecs en tiempo de deploy"
   # checkov:skip=CKV_AWS_260: "Ingress HTTP 80 requerido para ALB publico sin HTTPS."
   name        = "${local.name_prefix}-alb-sg"
   description = "Security Group para el Application Load Balancer"

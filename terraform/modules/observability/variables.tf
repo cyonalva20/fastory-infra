@@ -17,3 +17,4 @@ variable "prometheus_repository_url" { type = string }
 variable "loki_repository_url" { type = string }
 
 variable "alb_listener_arn" { type = string }
+variable "kms_key_arn" { type = string }

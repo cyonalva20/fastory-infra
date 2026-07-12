@@ -16,3 +16,4 @@ variable "use_fargate_spot" { type = bool }
 
 variable "db_credentials_secret_arn" { type = string }
 variable "jwt_secret_arn" { type = string }
+variable "kms_key_arn" { type = string }

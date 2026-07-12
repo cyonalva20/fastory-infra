@@ -15,17 +15,23 @@ locals {
 # ════════════════════════════════════════════════
 
 resource "aws_lb" "main" {
+  # checkov:skip=CKV_AWS_150: "Deletion protection disabled for academic demo environment"
+  # checkov:skip=CKV_AWS_91: "Access logging requires dedicated S3 bucket, out of scope for demo"
+  # checkov:skip=CKV2_AWS_28: "WAF is cost-prohibitive for academic project"
+  # checkov:skip=CKV2_AWS_20: "No ACM certificate available for HTTPS redirect in demo"
   name                       = "${local.name_prefix}-alb"
   internal                   = false
   load_balancer_type         = "application"
   security_groups            = [var.alb_security_group_id]
   subnets                    = var.public_subnet_ids
-  enable_deletion_protection = false # Demo
+  enable_deletion_protection = false
+  drop_invalid_header_fields = true
 
   tags = { Name = "${local.name_prefix}-alb" }
 }
 
 resource "aws_lb_target_group" "backend" {
+  # checkov:skip=CKV_AWS_378: "Internal ALB-to-Fargate traffic uses HTTP, no TLS termination needed"
   name        = "${local.name_prefix}-backend-tg"
   port        = 8080
   protocol    = "HTTP"
@@ -43,6 +49,8 @@ resource "aws_lb_target_group" "backend" {
 }
 
 resource "aws_lb_listener" "http" {
+  # checkov:skip=CKV_AWS_2: "No ACM certificate for HTTPS in academic demo"
+  # checkov:skip=CKV_AWS_103: "TLS not applicable without ACM certificate"
   load_balancer_arn = aws_lb.main.arn
   port              = 80
   protocol          = "HTTP"
@@ -112,15 +120,23 @@ resource "aws_iam_role_policy" "ecs_exec_secrets" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [{
-      Effect = "Allow"
-      Action = ["secretsmanager:GetSecretValue", "kms:Decrypt"]
-      Resource = [
-        var.db_credentials_secret_arn,
-        var.jwt_secret_arn,
-        "*" # Para KMS key
-      ]
-    }]
+    Statement = [
+      {
+        Effect = "Allow"
+        Action = ["secretsmanager:GetSecretValue"]
+        Resource = [
+          var.db_credentials_secret_arn,
+          var.jwt_secret_arn
+        ]
+      },
+      {
+        Effect = "Allow"
+        Action = ["kms:Decrypt"]
+        Resource = [
+          var.kms_key_arn
+        ]
+      }
+    ]
   })
 }
 
@@ -144,7 +160,8 @@ resource "aws_iam_role" "task" {
 
 resource "aws_cloudwatch_log_group" "backend" {
   name              = "/ecs/${local.name_prefix}-backend"
-  retention_in_days = 7
+  retention_in_days = 365
+  kms_key_id        = var.kms_key_arn
 }
 
 resource "aws_ecs_task_definition" "backend" {
@@ -158,9 +175,10 @@ resource "aws_ecs_task_definition" "backend" {
 
   container_definitions = jsonencode([
     {
-      name      = "log_router"
-      image     = "public.ecr.aws/aws-observability/aws-for-fluent-bit:latest"
-      essential = true
+      name                   = "log_router"
+      image                  = "public.ecr.aws/aws-observability/aws-for-fluent-bit:latest"
+      essential              = true
+      readonlyRootFilesystem = true
       firelensConfiguration = {
         type = "fluentbit"
         options = {
@@ -178,9 +196,10 @@ resource "aws_ecs_task_definition" "backend" {
       memoryReservation = 50
     },
     {
-      name      = "backend"
-      image     = "${var.backend_repository_url}:latest"
-      essential = true
+      name                   = "backend"
+      image                  = "${var.backend_repository_url}:latest"
+      essential              = true
+      readonlyRootFilesystem = true
       portMappings = [
         {
           containerPort = 8080

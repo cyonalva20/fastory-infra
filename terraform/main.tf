@@ -164,6 +164,7 @@ module "ecs" {
   use_fargate_spot          = var.use_fargate_spot
   db_credentials_secret_arn = module.security.db_credentials_secret_arn
   jwt_secret_arn            = module.security.jwt_secret_arn
+  kms_key_arn               = module.security.kms_key_arn
 }
 
 # ════════════════════════════════════════════════
@@ -187,4 +188,5 @@ module "observability" {
   prometheus_repository_url       = module.ecr.prometheus_repository_url
   loki_repository_url             = module.ecr.loki_repository_url
   alb_listener_arn                = module.ecs.alb_listener_arn
+  kms_key_arn                     = module.security.kms_key_arn
 }
