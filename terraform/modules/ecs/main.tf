@@ -200,14 +200,14 @@ resource "aws_ecs_task_definition" "backend" {
       logConfiguration = {
         logDriver = "awsfirelens"
         options = {
-          Name        = "http"
-          Host        = "loki.fastory.local"
-          Port        = "3100"
-          URI         = "/loki/api/v1/push"
-          Format      = "json"
-          tls         = "off"
-          tls.verify  = "off"
-          Retry_Limit = "2"
+          Name         = "http"
+          Host         = "loki.fastory.local"
+          Port         = "3100"
+          URI          = "/loki/api/v1/push"
+          Format       = "json"
+          tls          = "off"
+          "tls.verify" = "off"
+          Retry_Limit  = "2"
         }
       }
     }
