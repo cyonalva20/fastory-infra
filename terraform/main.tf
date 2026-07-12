@@ -104,13 +104,18 @@ module "storage" {
 # NOTA: Se actualizará en el Día 2 cuando se creen
 # los módulos de ECS y Observabilidad.
 
-# module "monitoring" {
-#   source = "./modules/monitoring"
-#
-#   project_name = var.project_name
-#   environment  = var.environment
-#   # Se reconectará con los recursos ECS en el Día 2
-# }
+# ════════════════════════════════════════════════
+# MÓDULO 9: MONITORING (CloudWatch)
+# ════════════════════════════════════════════════
+module "monitoring" {
+  source = "./modules/monitoring"
+
+  project_name     = var.project_name
+  environment      = var.environment
+  ecs_cluster_name = module.ecs.cluster_name
+  ecs_service_name = module.ecs.service_name
+  alb_arn_suffix   = module.ecs.alb_arn_suffix
+}
 
 # ════════════════════════════════════════════════
 # MÓDULO 5: ECR (Elastic Container Registry)
