@@ -4,7 +4,7 @@
 
 locals {
   name_prefix = "${var.project_name}-${var.environment}"
-  repos = ["backend", "grafana", "prometheus", "loki"]
+  repos       = ["backend", "grafana", "prometheus", "loki"]
 }
 
 resource "aws_ecr_repository" "repos" {

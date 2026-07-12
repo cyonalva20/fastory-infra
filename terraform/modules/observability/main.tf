@@ -18,8 +18,8 @@ resource "aws_iam_role" "obs_execution" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
@@ -35,8 +35,8 @@ resource "aws_iam_role" "obs_task" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
@@ -129,8 +129,8 @@ resource "aws_ecs_task_definition" "loki" {
   volume {
     name = "loki-data"
     efs_volume_configuration {
-      file_system_id          = var.efs_file_system_id
-      transit_encryption      = "ENABLED"
+      file_system_id     = var.efs_file_system_id
+      transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = var.efs_loki_access_point_id
         iam             = "ENABLED"
@@ -244,8 +244,8 @@ resource "aws_ecs_task_definition" "grafana" {
   volume {
     name = "grafana-data"
     efs_volume_configuration {
-      file_system_id          = var.efs_file_system_id
-      transit_encryption      = "ENABLED"
+      file_system_id     = var.efs_file_system_id
+      transit_encryption = "ENABLED"
       authorization_config {
         access_point_id = var.efs_grafana_access_point_id
         iam             = "ENABLED"

@@ -58,7 +58,7 @@ resource "aws_lb_listener" "http" {
 # ════════════════════════════════════════════════
 
 resource "aws_ecs_cluster" "main" {
-  name = "${local.name_prefix}"
+  name = local.name_prefix
 
   setting {
     name  = "containerInsights"
@@ -67,7 +67,7 @@ resource "aws_ecs_cluster" "main" {
 }
 
 resource "aws_ecs_cluster_capacity_providers" "main" {
-  cluster_name = aws_ecs_cluster.main.name
+  cluster_name       = aws_ecs_cluster.main.name
   capacity_providers = ["FARGATE", "FARGATE_SPOT"]
 
   default_capacity_provider_strategy {
@@ -94,8 +94,8 @@ resource "aws_iam_role" "execution" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
@@ -131,8 +131,8 @@ resource "aws_iam_role" "task" {
   assume_role_policy = jsonencode({
     Version = "2012-10-17"
     Statement = [{
-      Action = "sts:AssumeRole"
-      Effect = "Allow"
+      Action    = "sts:AssumeRole"
+      Effect    = "Allow"
       Principal = { Service = "ecs-tasks.amazonaws.com" }
     }]
   })
@@ -200,13 +200,13 @@ resource "aws_ecs_task_definition" "backend" {
       logConfiguration = {
         logDriver = "awsfirelens"
         options = {
-          Name       = "http"
-          Host       = "loki.fastory.local"
-          Port       = "3100"
-          URI        = "/loki/api/v1/push"
-          Format     = "json"
-          tls        = "off"
-          tls.verify = "off"
+          Name        = "http"
+          Host        = "loki.fastory.local"
+          Port        = "3100"
+          URI         = "/loki/api/v1/push"
+          Format      = "json"
+          tls         = "off"
+          tls.verify  = "off"
           Retry_Limit = "2"
         }
       }
