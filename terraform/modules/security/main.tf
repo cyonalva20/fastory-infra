@@ -369,11 +369,6 @@ resource "aws_kms_key" "main" {
           "kms:Describe*"
         ]
         Resource = "*"
-        Condition = {
-          ArnLike = {
-            "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${data.aws_region.current.name}:${var.aws_account_id}:log-group:*"
-          }
-        }
       }
     ]
   })
