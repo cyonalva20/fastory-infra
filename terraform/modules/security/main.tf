@@ -336,6 +336,8 @@ resource "aws_security_group" "observability" {
 # ════════════════════════════════════════════════
 # Customer Managed Key para cifrar secretos en Secrets Manager.
 
+data "aws_region" "current" {}
+
 resource "aws_kms_key" "main" {
   description             = "KMS key para cifrado de secretos de ${var.project_name}"
   deletion_window_in_days = 7
@@ -357,7 +359,7 @@ resource "aws_kms_key" "main" {
         Sid    = "AllowCloudWatchLogs"
         Effect = "Allow"
         Principal = {
-          Service = "logs.${var.aws_region}.amazonaws.com"
+          Service = "logs.${data.aws_region.current.name}.amazonaws.com"
         }
         Action = [
           "kms:Encrypt*",
@@ -369,7 +371,7 @@ resource "aws_kms_key" "main" {
         Resource = "*"
         Condition = {
           ArnEquals = {
-            "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${var.aws_region}:${var.aws_account_id}:log-group:*"
+            "kms:EncryptionContext:aws:logs:arn": "arn:aws:logs:${data.aws_region.current.name}:${var.aws_account_id}:log-group:*"
           }
         }
       }
