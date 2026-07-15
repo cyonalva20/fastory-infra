@@ -92,3 +92,19 @@ variable "use_fargate_spot" {
   type        = bool
   default     = true
 }
+
+# ──────────────────────────────────────────────
+# Auto Scaling
+# ──────────────────────────────────────────────
+
+variable "backend_min_capacity" {
+  description = "Número mínimo de contenedores Fargate (Auto Scaling)"
+  type        = number
+  default     = 1
+}
+
+variable "backend_max_capacity" {
+  description = "Número máximo de contenedores Fargate (Auto Scaling)"
+  type        = number
+  default     = 4
+}

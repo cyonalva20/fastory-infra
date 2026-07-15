@@ -12,7 +12,11 @@ aws_region   = "us-east-1"
 # ECS Fargate — recursos mínimos para desarrollo
 backend_cpu           = 256 # 0.25 vCPU
 backend_memory        = 512 # 512 MB
-backend_desired_count = 1   # Una sola tarea
+backend_desired_count = 1   # Una sola tarea inicial
 
 # Fargate Spot para ahorrar costos en dev
 use_fargate_spot = true
+
+# Auto Scaling — escala de 1 a 4 contenedores en dev
+backend_min_capacity = 1
+backend_max_capacity = 4

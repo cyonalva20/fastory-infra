@@ -26,3 +26,8 @@ output "alb_arn_suffix" {
   description = "ARN Suffix del ALB, necesario para alarmas de CloudWatch"
   value       = aws_lb.main.arn_suffix
 }
+
+output "autoscaling_cpu_policy_arn" {
+  description = "ARN de la política de Auto Scaling por CPU"
+  value       = aws_appautoscaling_policy.backend_cpu.arn
+}
