@@ -17,6 +17,15 @@ variable "use_fargate_spot" { type = bool }
 variable "db_credentials_secret_arn" { type = string }
 variable "jwt_secret_arn" { type = string }
 variable "kms_key_arn" { type = string }
+variable "rds_proxy_endpoint" { type = string }
+variable "db_name" {
+  type    = string
+  default = "fastory_db"
+}
+variable "db_username" {
+  type    = string
+  default = "fastory_admin"
+}
 
 # Auto Scaling
 variable "backend_min_capacity" {

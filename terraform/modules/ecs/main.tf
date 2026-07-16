@@ -199,11 +199,29 @@ resource "aws_ecs_task_definition" "backend" {
       name                   = "backend"
       image                  = "${var.backend_repository_url}:latest"
       essential              = true
-      readonlyRootFilesystem = true
+      readonlyRootFilesystem = false
       portMappings = [
         {
           containerPort = 8080
           protocol      = "tcp"
+        }
+      ]
+      environment = [
+        {
+          name  = "SPRING_DATASOURCE_URL"
+          value = "jdbc:postgresql://${var.rds_proxy_endpoint}:5432/${var.db_name}"
+        },
+        {
+          name  = "SPRING_DATASOURCE_USERNAME"
+          value = var.db_username
+        },
+        {
+          name  = "SPRING_JPA_HIBERNATE_DDL_AUTO"
+          value = "update"
+        },
+        {
+          name  = "SERVER_PORT"
+          value = "8080"
         }
       ]
       secrets = [
@@ -217,16 +235,11 @@ resource "aws_ecs_task_definition" "backend" {
         }
       ]
       logConfiguration = {
-        logDriver = "awsfirelens"
+        logDriver = "awslogs"
         options = {
-          Name         = "http"
-          Host         = "loki.fastory.local"
-          Port         = "3100"
-          URI          = "/loki/api/v1/push"
-          Format       = "json"
-          tls          = "off"
-          "tls.verify" = "off"
-          Retry_Limit  = "2"
+          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
+          "awslogs-region"        = "us-east-1"
+          "awslogs-stream-prefix" = "backend"
         }
       }
     }

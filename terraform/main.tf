@@ -181,6 +181,7 @@ module "ecs" {
   db_credentials_secret_arn = module.security.db_credentials_secret_arn
   jwt_secret_arn            = module.security.jwt_secret_arn
   kms_key_arn               = module.security.kms_key_arn
+  rds_proxy_endpoint        = module.database.proxy_endpoint
 }
 
 # ════════════════════════════════════════════════
