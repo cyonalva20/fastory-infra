@@ -16,3 +16,7 @@ backend_desired_count = 2    # Alta disponibilidad
 
 # Fargate estándar en producción (mayor estabilidad)
 use_fargate_spot = false
+
+# Auto Scaling — escala de 2 a 25 contenedores en producción (Soporta ~10k usuarios)
+backend_min_capacity = 2
+backend_max_capacity = 25

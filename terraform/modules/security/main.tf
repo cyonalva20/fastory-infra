@@ -110,6 +110,15 @@ resource "aws_security_group" "ecs" {
     cidr_blocks = [var.vpc_cidr]
   }
 
+  # Redis hacia ElastiCache
+  egress {
+    description = "Redis hacia ElastiCache"
+    from_port   = 6379
+    to_port     = 6379
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
   # Logs hacia Loki (observabilidad)
   egress {
     description = "Logs hacia Loki"
@@ -176,7 +185,41 @@ resource "aws_security_group" "rds" {
 }
 
 # ════════════════════════════════════════════════
-# 4. SECURITY GROUP — EFS (Persistencia Observabilidad)
+# 4. SECURITY GROUP — ElastiCache (Redis)
+# ════════════════════════════════════════════════
+# Solo permite tráfico Redis (6379) desde las tareas ECS Fargate.
+
+resource "aws_security_group" "redis" {
+  # checkov:skip=CKV2_AWS_5: "Falso positivo. El SG se asocia a ElastiCache en el modulo elasticache."
+  name        = "${local.name_prefix}-redis-sg"
+  description = "Security Group para ElastiCache Redis"
+  vpc_id      = var.vpc_id
+
+  # Redis solo desde ECS Fargate
+  ingress {
+    description     = "Redis desde ECS Fargate"
+    from_port       = 6379
+    to_port         = 6379
+    protocol        = "tcp"
+    security_groups = [aws_security_group.ecs.id]
+  }
+
+  # Egress restringido a la VPC
+  egress {
+    description = "Respuestas dentro de la VPC"
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  tags = {
+    Name = "${local.name_prefix}-redis-sg"
+  }
+}
+
+# ════════════════════════════════════════════════
+# 5. SECURITY GROUP — EFS (Persistencia Observabilidad)
 # ════════════════════════════════════════════════
 # Permite NFS (2049) desde las tareas de observabilidad.
 

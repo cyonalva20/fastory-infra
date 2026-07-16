@@ -33,6 +33,11 @@ output "observability_security_group_id" {
   value       = aws_security_group.observability.id
 }
 
+output "redis_security_group_id" {
+  description = "ID del Security Group de ElastiCache Redis"
+  value       = aws_security_group.redis.id
+}
+
 # ── KMS ──────────────────────────────────────
 
 output "kms_key_id" {

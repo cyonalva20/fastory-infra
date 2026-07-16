@@ -17,3 +17,16 @@ variable "use_fargate_spot" { type = bool }
 variable "db_credentials_secret_arn" { type = string }
 variable "jwt_secret_arn" { type = string }
 variable "kms_key_arn" { type = string }
+
+# Auto Scaling
+variable "backend_min_capacity" {
+  description = "Número mínimo de tareas Fargate (Auto Scaling)"
+  type        = number
+  default     = 1
+}
+
+variable "backend_max_capacity" {
+  description = "Número máximo de tareas Fargate (Auto Scaling)"
+  type        = number
+  default     = 4
+}

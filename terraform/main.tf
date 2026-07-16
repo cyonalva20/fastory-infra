@@ -110,11 +110,12 @@ module "storage" {
 module "monitoring" {
   source = "./modules/monitoring"
 
-  project_name     = var.project_name
-  environment      = var.environment
-  ecs_cluster_name = module.ecs.cluster_name
-  ecs_service_name = module.ecs.service_name
-  alb_arn_suffix   = module.ecs.alb_arn_suffix
+  project_name             = var.project_name
+  environment              = var.environment
+  ecs_cluster_name         = module.ecs.cluster_name
+  ecs_service_name         = module.ecs.service_name
+  alb_arn_suffix           = module.ecs.alb_arn_suffix
+  autoscaling_scale_up_arn = module.ecs.autoscaling_cpu_policy_arn
 }
 
 # ════════════════════════════════════════════════
@@ -144,6 +145,19 @@ module "efs" {
 }
 
 # ════════════════════════════════════════════════
+# MÓDULO 6B: ELASTICACHE (Redis)
+# ════════════════════════════════════════════════
+
+module "elasticache" {
+  source = "./modules/elasticache"
+
+  project_name            = var.project_name
+  environment             = var.environment
+  private_subnet_ids      = module.networking.private_subnet_ids
+  redis_security_group_id = module.security.redis_security_group_id
+}
+
+# ════════════════════════════════════════════════
 # MÓDULO 7: ECS CORE (Backend)
 # ════════════════════════════════════════════════
 
@@ -162,6 +176,8 @@ module "ecs" {
   backend_memory            = var.backend_memory
   backend_desired_count     = var.backend_desired_count
   use_fargate_spot          = var.use_fargate_spot
+  backend_min_capacity      = var.backend_min_capacity
+  backend_max_capacity      = var.backend_max_capacity
   db_credentials_secret_arn = module.security.db_credentials_secret_arn
   jwt_secret_arn            = module.security.jwt_secret_arn
   kms_key_arn               = module.security.kms_key_arn
