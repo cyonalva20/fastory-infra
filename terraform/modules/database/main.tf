@@ -184,10 +184,11 @@ resource "aws_db_proxy" "main" {
   vpc_subnet_ids         = var.private_subnet_ids
 
   auth {
-    auth_scheme = "SECRETS"
-    description = "Credenciales de la BD desde Secrets Manager"
-    iam_auth    = "DISABLED"
-    secret_arn  = aws_secretsmanager_secret.rds_credentials.arn
+    auth_scheme               = "SECRETS"
+    description               = "Credenciales de la BD desde Secrets Manager"
+    iam_auth                  = "DISABLED"
+    client_password_auth_type = "POSTGRES_SCRAM_SHA_256"
+    secret_arn                = aws_secretsmanager_secret.rds_credentials.arn
   }
 
   tags = {

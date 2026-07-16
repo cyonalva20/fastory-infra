@@ -201,6 +201,10 @@ resource "aws_ecs_task_definition" "backend" {
         {
           name  = "SERVER_PORT"
           value = "8080"
+        },
+        {
+          name  = "LOKI_URL"
+          value = "http://loki.fastory.local:3100/loki/api/v1/push"
         }
       ]
       secrets = [
