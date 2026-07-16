@@ -145,6 +145,19 @@ module "efs" {
 }
 
 # ════════════════════════════════════════════════
+# MÓDULO 6B: ELASTICACHE (Redis)
+# ════════════════════════════════════════════════
+
+module "elasticache" {
+  source = "./modules/elasticache"
+
+  project_name            = var.project_name
+  environment             = var.environment
+  private_subnet_ids      = module.networking.private_subnet_ids
+  redis_security_group_id = module.security.redis_security_group_id
+}
+
+# ════════════════════════════════════════════════
 # MÓDULO 7: ECS CORE (Backend)
 # ════════════════════════════════════════════════
 
