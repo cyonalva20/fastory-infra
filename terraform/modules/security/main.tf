@@ -179,13 +179,22 @@ resource "aws_security_group" "rds" {
     self        = true
   }
 
-  # [FIX CKV_AWS_382] Egress restringido a la VPC
+  # Permite que el RDS Proxy hable con la BD (egress)
   egress {
-    description = "Respuestas dentro de la VPC"
+    description = "Conexion proxy a bd"
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    self        = true
+  }
+
+  # Permite que el RDS Proxy acceda a Secrets Manager y KMS
+  egress {
+    description = "Acceso a Secrets Manager y KMS"
     from_port   = 443
     to_port     = 443
     protocol    = "tcp"
-    cidr_blocks = [var.vpc_cidr]
+    cidr_blocks = ["0.0.0.0/0"]
   }
 
   tags = {
