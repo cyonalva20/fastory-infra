@@ -178,7 +178,7 @@ resource "aws_db_proxy" "main" {
   debug_logging          = false
   engine_family          = "POSTGRESQL"
   idle_client_timeout    = 1800
-  require_tls            = true
+  require_tls            = false
   role_arn               = aws_iam_role.rds_proxy.arn
   vpc_security_group_ids = [var.rds_security_group_id]
   vpc_subnet_ids         = var.private_subnet_ids
