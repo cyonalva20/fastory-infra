@@ -188,7 +188,7 @@ resource "aws_ecs_task_definition" "backend" {
       environment = [
         {
           name  = "SPRING_DATASOURCE_URL"
-          value = "jdbc:postgresql://${var.rds_proxy_endpoint}:5432/${var.db_name}"
+          value = "jdbc:postgresql://${var.rds_proxy_endpoint}:5432/${var.db_name}?sslmode=disable"
         },
         {
           name  = "SPRING_DATASOURCE_USERNAME"
