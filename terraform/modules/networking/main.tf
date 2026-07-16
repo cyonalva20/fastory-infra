@@ -58,7 +58,7 @@ resource "aws_flow_log" "main" {
 
 resource "aws_cloudwatch_log_group" "vpc_flow_logs" {
   # checkov:skip=CKV_AWS_158: "Encriptacion KMS para CloudWatch logs no requerida en demo."
-  name              = "/aws/vpc/${local.name_prefix}-flow-logs-v2"
+  name              = "/aws/vpc/${local.name_prefix}-flow-logs-v3"
   retention_in_days = 365
 
   tags = {
