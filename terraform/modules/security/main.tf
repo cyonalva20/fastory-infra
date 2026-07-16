@@ -170,6 +170,15 @@ resource "aws_security_group" "rds" {
     security_groups = [aws_security_group.ecs.id]
   }
 
+  # Permite que el RDS Proxy se conecte a la BD (comparten SG)
+  ingress {
+    description = "PostgreSQL interno (Proxy a BD)"
+    from_port   = var.db_port
+    to_port     = var.db_port
+    protocol    = "tcp"
+    self        = true
+  }
+
   # [FIX CKV_AWS_382] Egress restringido a la VPC
   egress {
     description = "Respuestas dentro de la VPC"
