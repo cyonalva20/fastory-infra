@@ -175,27 +175,6 @@ resource "aws_ecs_task_definition" "backend" {
 
   container_definitions = jsonencode([
     {
-      name                   = "log_router"
-      image                  = "public.ecr.aws/aws-observability/aws-for-fluent-bit:latest"
-      essential              = true
-      readonlyRootFilesystem = true
-      firelensConfiguration = {
-        type = "fluentbit"
-        options = {
-          enable-ecs-log-metadata = "true"
-        }
-      }
-      logConfiguration = {
-        logDriver = "awslogs"
-        options = {
-          "awslogs-group"         = aws_cloudwatch_log_group.backend.name
-          "awslogs-region"        = "us-east-1"
-          "awslogs-stream-prefix" = "firelens"
-        }
-      }
-      memoryReservation = 50
-    },
-    {
       name                   = "backend"
       image                  = "${var.backend_repository_url}:latest"
       essential              = true
