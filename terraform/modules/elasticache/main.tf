@@ -33,7 +33,7 @@ resource "aws_elasticache_cluster" "redis" {
 
   # Cifrado en tránsito y en reposo
   transit_encryption_enabled = false # Requiere TLS en el cliente
-  snapshot_retention_limit   = 0     # Sin snapshots en dev para ahorrar
+  snapshot_retention_limit   = 1     # Checkov requiere backups habilitados
 
   tags = {
     Name        = "${local.name_prefix}-redis"
