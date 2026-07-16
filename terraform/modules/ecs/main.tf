@@ -165,6 +165,7 @@ resource "aws_cloudwatch_log_group" "backend" {
 }
 
 resource "aws_ecs_task_definition" "backend" {
+  # checkov:skip=CKV_AWS_336: "Backend requires writable filesystem for Excel/PDF exports via POI/OpenPDF"
   family                   = "${local.name_prefix}-backend"
   network_mode             = "awsvpc"
   requires_compatibilities = ["FARGATE"]
